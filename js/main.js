@@ -73,6 +73,7 @@
           <nav><ul>
             ${NAV.map(([href, label, key]) => `<li><a href="${href}"${key === page ? ' class="active" aria-current="page"' : ""}>${label}</a></li>`).join("")}
           </ul></nav>
+          ${V.instagram ? `<a class="nav-insta" href="${esc(V.instagram)}" target="_blank" rel="noopener" aria-label="Venora Jewels on Instagram">${ICON.insta}</a>` : ""}
           <a class="btn btn-dark btn-sm nav-cta" href="contact.html#consultation">Book Consultation</a>
         </div>`;
       const btn = header.querySelector(".menu-btn");
@@ -104,7 +105,7 @@
             <a href="${waLink("Hello Venora Jewels!")}" target="_blank" rel="noopener">${ICON.whatsapp} WhatsApp</a>
             <a href="mailto:${esc(V.email)}">${ICON.mail} ${esc(V.email)}</a>
             <a href="tel:+${esc(V.whatsapp)}">${ICON.phone} ${esc(V.phoneDisplay)}</a>
-            ${V.instagram ? `<a href="${esc(V.instagram)}" target="_blank" rel="noopener">${ICON.insta} Instagram</a>` : ""}
+            ${V.instagram ? `<a href="${esc(V.instagram)}" target="_blank" rel="noopener">${ICON.insta} @jewels_venora</a>` : ""}
           </div>
         </div>
         <div class="wrap footer-bottom">© ${new Date().getFullYear()} Venora Jewels. All rights reserved.</div>`;

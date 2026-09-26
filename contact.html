@@ -97,7 +97,7 @@
     <a class="method" href="mailto:${esc(V.email)}">${ICON.mail}<div><h3>Email</h3><p>${esc(V.email)}</p></div></a>
     <a class="method" href="tel:+${esc(V.whatsapp)}">${ICON.phone}<div><h3>Call</h3><p>${esc(V.phoneDisplay)} · ${esc(V.hours)}</p></div></a>
     <a class="method" href="#consultation" id="bookLink">${ICON.calendar}<div><h3>Book a Consultation</h3><p>Video call, phone or in-person — a personal session with our jewellery expert.</p></div></a>
-    ${V.instagram ? `<a class="method" href="${esc(V.instagram)}" target="_blank" rel="noopener">${ICON.insta}<div><h3>Instagram</h3><p>See our latest designs</p></div></a>` : ""}
+    ${V.instagram ? `<a class="method" href="${esc(V.instagram)}" target="_blank" rel="noopener">${ICON.insta}<div><h3>Instagram</h3><p>@jewels_venora · See our latest designs</p></div></a>` : ""}
     <div class="method">${ICON.calendar}<div><h3>Hours</h3><p>${esc(V.hours)}<br>${esc(V.location)}</p></div></div>`;
 
   document.getElementById("sendWa").innerHTML = ICON.whatsapp + " Send on WhatsApp";

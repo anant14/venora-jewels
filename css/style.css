@@ -56,6 +56,9 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.15; }
 .nav ul { display: flex; gap: 30px; list-style: none; }
 .nav ul a { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; padding: 6px 0; border-bottom: 1px solid transparent; transition: .2s; }
 .nav ul a:hover, .nav ul a.active { color: var(--gold-dark); border-color: var(--gold); }
+.nav-insta { display: flex; color: var(--wine); padding: 6px; transition: color .2s; }
+.nav-insta:hover { color: var(--gold); }
+.nav-insta .ico { width: 22px; height: 22px; }
 .menu-btn { display: none; margin-left: auto; background: none; border: 0; width: 40px; height: 40px; cursor: pointer; flex-direction: column; justify-content: center; gap: 6px; padding: 8px; }
 .menu-btn span { display: block; height: 1.5px; background: var(--ink); transition: .25s; }
 #site-header.open .menu-btn span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
@@ -350,6 +353,10 @@ a.method:hover { border-color: var(--gold); }
 }
 @media (max-width: 860px) {
   .menu-btn { display: flex; }
+  .nav { gap: 8px; }
+  .nav-insta { order: 2; }
+  .menu-btn { order: 3; margin-left: 0; }
+  .nav .logo { margin-right: auto; }
   .nav nav { position: absolute; top: 76px; left: 0; right: 0; background: var(--bg); border-bottom: 1px solid var(--line); display: none; }
   #site-header.open .nav nav { display: block; }
   .nav ul { flex-direction: column; gap: 0; }

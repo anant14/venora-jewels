@@ -10,6 +10,6 @@ window.VENORA = {
   phoneDisplay: "+91 85959 26633",
   email: "jewelsvenora@gmail.com",
   instagram: "https://www.instagram.com/jewels_venora/",
-  hours: "Mon – Sat, 11:00 am – 7:00 pm",
+  hours: "Mon – Sat, 11:00 am – 8:00 pm",
   location: "Agra, India"
 };
