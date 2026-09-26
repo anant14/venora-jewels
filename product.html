@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Venora Jewels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<meta name="description" content="Venora Jewels — 100% IGI certified lab grown diamond jewellery in hallmarked 9KT, 14KT & 18KT gold, from Agra.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Venora Jewels">
+<meta property="og:title" content="Venora Jewels">
+<meta property="og:description" content="Venora Jewels — 100% IGI certified lab grown diamond jewellery in hallmarked 9KT, 14KT & 18KT gold, from Agra.">
+<meta property="og:url" content="https://www.venorajewels.com/product.html">
+<meta property="og:image" content="https://www.venorajewels.com/images/brand/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="images/brand/icon.png">
+<meta name="theme-color" content="#2f0719">
+</head>
+<body data-page="collections">
+<header id="site-header"></header>
+
+<main>
+  <section class="tight">
+    <div class="wrap" id="product"></div>
+  </section>
+
+  <section class="alt tight" id="relatedWrap">
+    <div class="wrap">
+      <div class="section-head"><h2>You may also love</h2></div>
+      <div class="grid" id="related"></div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script>
+  const { esc, waLink, ICON, artSvg, productCard, priceText, enquiryText } = Venora;
+  const code = new URLSearchParams(location.search).get("code");
+  const p = PRODUCTS.find(x => x.code === code);
+  const root = document.getElementById("product");
+
+  if (!p) {
+    root.innerHTML = `<div class="empty"><h1>Design not found</h1><p>This piece may have moved. Explore our full collection instead.</p><a class="btn btn-dark" href="collections.html">View Collections</a></div>`;
+    document.getElementById("relatedWrap").remove();
+  } else {
+    document.title = p.name + " | Venora Jewels";
+    const choices = {};
+    Object.entries(p.options || {}).forEach(([k, v]) => { choices[k] = v[0]; });
+    const images = p.images || [];
+
+    root.innerHTML = `
+      <p class="crumbs"><a href="index.html">Home</a> / <a href="collections.html">Collections</a> / <a href="collections.html?cat=${encodeURIComponent(p.category)}">${esc(p.category)}</a> / ${esc(p.name)}</p>
+      <div class="product">
+        <div>
+          <div class="gallery-main" id="mainImg">${images.length ? `<img src="${esc(images[0])}" alt="${esc(p.name)}">` : artSvg(p.category)}</div>
+          ${images.length > 1 ? `<div class="thumbs">${images.map((src, i) => `<button class="${i === 0 ? "active" : ""}" data-src="${esc(src)}" aria-label="View image ${i + 1}"><img src="${esc(src)}" alt=""></button>`).join("")}</div>` : ""}
+        </div>
+        <div class="product-info">
+          <span class="eyebrow">${esc(p.category)}</span>
+          <h1>${esc(p.name)}</h1>
+          <span class="code">Design code: ${esc(p.code)}</span>
+          <p class="price">${esc(priceText(p))}</p>
+          <p class="desc">${esc(p.description)}</p>
+          ${Object.entries(p.options || {}).map(([k, vals]) => `
+            <div class="opt">
+              <div class="opt-label">${esc(k)} <b data-opt-label="${esc(k)}">${esc(vals[0])}</b></div>
+              <div class="chips" data-opt="${esc(k)}">
+                ${vals.map((v, i) => `<button type="button" class="${i === 0 ? "active" : ""}" data-val="${esc(v)}">${esc(v)}</button>`).join("")}
+              </div>
+            </div>`).join("")}
+          <div class="product-actions">
+            <a class="btn btn-wa" id="enquire" target="_blank" rel="noopener">${ICON.whatsapp} Enquire on WhatsApp</a>
+            <a class="btn btn-ghost" id="consult" href="contact.html?product=${encodeURIComponent(p.code)}#consultation">${ICON.calendar} Book a Consultation</a>
+          </div>
+          <table class="spec">
+            ${Object.entries(p.details || {}).map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}
+          </table>
+          <div class="assure">
+            <div><strong>IGI certified</strong>Graded diamond</div>
+            <div><strong>Hallmarked</strong>9KT · 14KT · 18KT</div>
+            <div><strong>Your colour</strong>Rose · White · Yellow</div>
+          </div>
+        </div>
+      </div>`;
+
+    const enquire = document.getElementById("enquire");
+    const update = () => { enquire.href = waLink(enquiryText(p, choices)); };
+    update();
+
+    root.querySelectorAll(".chips").forEach(group => {
+      group.addEventListener("click", e => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        group.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const key = group.dataset.opt;
+        choices[key] = btn.dataset.val;
+        root.querySelector(`[data-opt-label="${CSS.escape(key)}"]`).textContent = btn.dataset.val;
+        update();
+      });
+    });
+
+    const thumbs = root.querySelector(".thumbs");
+    if (thumbs) thumbs.addEventListener("click", e => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      thumbs.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      root.querySelector("#mainImg img").src = btn.dataset.src;
+    });
+
+    const related = PRODUCTS.filter(x => x.category === p.category && x.code !== p.code)
+      .concat(PRODUCTS.filter(x => x.category !== p.category))
+      .slice(0, 4);
+    document.getElementById("related").innerHTML = related.map(productCard).join("");
+  }
+</script>
+</body>
+</html>

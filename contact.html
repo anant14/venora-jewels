@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Us | Venora Jewels</title>
+<meta name="description" content="Contact Venora Jewels on WhatsApp or email, send an enquiry, or book a personal consultation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="canonical" href="https://www.venorajewels.com/contact.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Venora Jewels">
+<meta property="og:title" content="Contact Us | Venora Jewels">
+<meta property="og:description" content="Contact Venora Jewels on WhatsApp or email, send an enquiry, or book a personal consultation.">
+<meta property="og:url" content="https://www.venorajewels.com/contact.html">
+<meta property="og:image" content="https://www.venorajewels.com/images/brand/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="images/brand/icon.png">
+<meta name="theme-color" content="#2f0719">
+</head>
+<body data-page="contact">
+<header id="site-header"></header>
+
+<main>
+  <div class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">Contact Us</span>
+      <h1>We'd love to hear from you</h1>
+      <p>Ask about a design, request a price, or book a personal consultation. We usually reply within a few hours.</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap contact-grid">
+      <div class="contact-methods" id="methods"></div>
+
+      <form class="form" id="consultation" novalidate>
+        <div class="tabs" role="tablist">
+          <button type="button" data-mode="enquiry" class="active" role="tab">Send an Enquiry</button>
+          <button type="button" data-mode="consult" role="tab">Book Consultation</button>
+        </div>
+        <h2 id="formTitle">Send an enquiry</h2>
+        <p id="formSub">Fill in your details and send them to us on WhatsApp or by email.</p>
+
+        <div class="row">
+          <div class="field"><label for="name">Full name *</label><input id="name" required autocomplete="name"></div>
+          <div class="field"><label for="phone">Phone *</label><input id="phone" type="tel" required autocomplete="tel"></div>
+        </div>
+        <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email"></div>
+        <div class="field"><label for="interest">Interested in</label><select id="interest"></select></div>
+
+        <div class="row consult-only">
+          <div class="field"><label for="date">Preferred date *</label><input id="date" type="date"></div>
+          <div class="field"><label for="time">Preferred time</label>
+            <select id="time"><option>Morning (11 am – 1 pm)</option><option>Afternoon (1 pm – 4 pm)</option><option>Evening (4 pm – 7 pm)</option></select>
+          </div>
+        </div>
+        <div class="field consult-only"><label for="mode">Consultation type</label>
+          <select id="mode"><option>Video call</option><option>Phone call</option><option>WhatsApp chat</option><option>In-person visit</option></select>
+        </div>
+        <div class="row consult-only">
+          <div class="field"><label for="budget">Budget</label>
+            <select id="budget"><option>Not sure yet</option><option>Under ₹50,000</option><option>₹50,000 – ₹1,00,000</option><option>₹1,00,000 – ₹2,50,000</option><option>₹2,50,000 – ₹5,00,000</option><option>Above ₹5,00,000</option></select>
+          </div>
+          <div class="field"><label for="occasion">Occasion</label>
+            <select id="occasion"><option>Just because</option><option>Engagement</option><option>Wedding</option><option>Anniversary</option><option>Birthday</option><option>Gift</option></select>
+          </div>
+        </div>
+
+        <div class="field"><label for="msg">Message</label><textarea id="msg" placeholder="Ring size, metal preference, design ideas…"></textarea></div>
+
+        <div class="send-row">
+          <button type="submit" class="btn btn-wa" data-via="wa" id="sendWa"></button>
+          <button type="submit" class="btn btn-ghost" data-via="email" id="sendMail"></button>
+        </div>
+        <p class="form-note">Sending opens WhatsApp or your email app with your details filled in — just press send.</p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script>
+  const { esc, waLink, ICON } = Venora;
+  const V = window.VENORA;
+
+  document.getElementById("methods").innerHTML = `
+    <a class="method wa" href="${waLink("Hello Venora Jewels!")}" target="_blank" rel="noopener">${ICON.whatsapp}<div><h3>WhatsApp</h3><p>Chat with us for prices, photos and videos · ${esc(V.phoneDisplay)}</p></div></a>
+    <a class="method" href="mailto:${esc(V.email)}">${ICON.mail}<div><h3>Email</h3><p>${esc(V.email)}</p></div></a>
+    <a class="method" href="tel:+${esc(V.whatsapp)}">${ICON.phone}<div><h3>Call</h3><p>${esc(V.phoneDisplay)} · ${esc(V.hours)}</p></div></a>
+    <a class="method" href="#consultation" id="bookLink">${ICON.calendar}<div><h3>Book a Consultation</h3><p>Video call, phone or in-person — a personal session with our jewellery expert.</p></div></a>
+    ${V.instagram ? `<a class="method" href="${esc(V.instagram)}" target="_blank" rel="noopener">${ICON.insta}<div><h3>Instagram</h3><p>See our latest designs</p></div></a>` : ""}
+    <div class="method">${ICON.calendar}<div><h3>Hours</h3><p>${esc(V.hours)}<br>${esc(V.location)}</p></div></div>`;
+
+  document.getElementById("sendWa").innerHTML = ICON.whatsapp + " Send on WhatsApp";
+  document.getElementById("sendMail").innerHTML = ICON.mail + " Send by Email";
+
+  // Product list
+  const interest = document.getElementById("interest");
+  interest.innerHTML = '<option value="">General enquiry</option>' +
+    PRODUCTS.map(p => `<option value="${esc(p.code)}">${esc(p.name)} (${esc(p.code)})</option>`).join("") +
+    '<option value="custom">Custom design</option>';
+  const pre = new URLSearchParams(location.search).get("product");
+  if (pre && PRODUCTS.some(p => p.code === pre)) interest.value = pre;
+
+  // Enquiry / consultation tabs
+  const form = document.getElementById("consultation");
+  const dateInput = document.getElementById("date");
+  dateInput.min = new Date().toISOString().slice(0, 10);
+
+  function setMode(mode) {
+    const consult = mode === "consult";
+    form.classList.toggle("consult", consult);
+    form.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+    document.getElementById("formTitle").textContent = consult ? "Book a consultation" : "Send an enquiry";
+    document.getElementById("formSub").textContent = consult
+      ? "Choose a time that suits you and we'll confirm your appointment."
+      : "Fill in your details and send them to us on WhatsApp or by email.";
+    dateInput.required = consult;
+  }
+  form.querySelector(".tabs").addEventListener("click", e => { if (e.target.dataset.mode) setMode(e.target.dataset.mode); });
+  document.getElementById("bookLink").addEventListener("click", () => setMode("consult"));
+  if (location.hash === "#consultation") setMode("consult");
+  window.addEventListener("hashchange", () => { if (location.hash === "#consultation") setMode("consult"); });
+
+  function buildMessage() {
+    const val = id => document.getElementById(id).value.trim();
+    const consult = form.classList.contains("consult");
+    const opt = interest.options[interest.selectedIndex].text;
+    const lines = [consult ? "Hello Venora Jewels, I'd like to book a consultation." : "Hello Venora Jewels, I have an enquiry.", ""];
+    lines.push("Name: " + val("name"), "Phone: " + val("phone"));
+    if (val("email")) lines.push("Email: " + val("email"));
+    lines.push("Interested in: " + opt);
+    if (consult) {
+      const d = dateInput.value ? new Date(dateInput.value + "T00:00").toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" }) : "";
+      lines.push("Preferred date: " + d, "Preferred time: " + val("time"), "Consultation type: " + val("mode"), "Budget: " + val("budget"), "Occasion: " + val("occasion"));
+    }
+    if (val("msg")) lines.push("Message: " + val("msg"));
+    return { subject: consult ? "Consultation request — " + val("name") : "Enquiry — " + val("name"), body: lines.join("\n") };
+  }
+
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    if (!form.reportValidity()) return;
+    const { subject, body } = buildMessage();
+    if (e.submitter && e.submitter.dataset.via === "email") {
+      location.href = "mailto:" + V.email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+    } else {
+      window.open(waLink(body), "_blank");
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collections | Venora Jewels</title>
+<meta name="description" content="Explore Venora Jewels' lab grown diamond rings, earrings, necklaces and bracelets.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="canonical" href="https://www.venorajewels.com/collections.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Venora Jewels">
+<meta property="og:title" content="Collections | Venora Jewels">
+<meta property="og:description" content="Explore Venora Jewels' lab grown diamond rings, earrings, necklaces and bracelets.">
+<meta property="og:url" content="https://www.venorajewels.com/collections.html">
+<meta property="og:image" content="https://www.venorajewels.com/images/brand/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="images/brand/icon.png">
+<meta name="theme-color" content="#2f0719">
+</head>
+<body data-page="collections">
+<header id="site-header"></header>
+
+<main>
+  <div class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">Collections</span>
+      <h1 id="title">All Designs</h1>
+      <p>Every design is available in multiple metals, shapes and carat weights. Open any piece to choose your variation and enquire on WhatsApp.</p>
+    </div>
+  </div>
+
+  <section class="tight">
+    <div class="wrap">
+      <div class="toolbar">
+        <div class="filters" id="filters"></div>
+        <span class="count" id="count"></span>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <section class="dark cta-band tight">
+    <div class="wrap">
+      <h2>Can't find what you're looking for?</h2>
+      <p>We create custom designs. Share a picture or an idea, and we'll bring it to life.</p>
+      <div class="btn-row">
+        <a class="btn btn-wa" data-wa="Hello Venora Jewels, I'd like to discuss a custom design.">Discuss a Custom Design</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script>
+  const { productCard, esc } = Venora;
+  const cats = ["All", ...new Set(PRODUCTS.map(p => p.category))];
+  const filtersEl = document.getElementById("filters");
+
+  function show(cat) {
+    if (!cats.includes(cat)) cat = "All";
+    const list = cat === "All" ? PRODUCTS : PRODUCTS.filter(p => p.category === cat);
+    document.getElementById("grid").innerHTML = list.map(productCard).join("");
+    document.getElementById("count").textContent = list.length + " design" + (list.length === 1 ? "" : "s");
+    document.getElementById("title").textContent = cat === "All" ? "All Designs" : cat;
+    document.title = (cat === "All" ? "Collections" : cat) + " | Venora Jewels";
+    filtersEl.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.cat === cat));
+  }
+
+  filtersEl.innerHTML = cats.map(c => `<button data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+  filtersEl.addEventListener("click", e => {
+    const cat = e.target.dataset.cat;
+    if (!cat) return;
+    history.replaceState(null, "", cat === "All" ? "collections.html" : "?cat=" + encodeURIComponent(cat));
+    show(cat);
+  });
+
+  show(new URLSearchParams(location.search).get("cat") || "All");
+</script>
+</body>
+</html>

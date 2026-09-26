@@ -1,0 +1,11 @@
+# Private source material — never publish
+*.docx
+*.txt
+!robots.txt
+header_venora.jpeg
+logo_venora.jpeg
+sizes_of_lgd.jpeg
+
+# Local build output (Netlify upload copy)
+upload/
+MAKE-UPLOAD-FOLDER.bat
