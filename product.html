@@ -43,9 +43,9 @@
 <script src="js/products.js"></script>
 <script src="js/main.js"></script>
 <script>
-  const { esc, waLink, ICON, artSvg, productCard, priceText, enquiryText } = Venora;
-  const code = new URLSearchParams(location.search).get("code");
-  const p = PRODUCTS.find(x => x.code === code);
+  const { esc, waLink, ICON, artSvg, productCard, priceText, enquiryText, COLOURS, colourCodes, photo, swatches } = Venora;
+  const params = new URLSearchParams(location.search);
+  const p = PRODUCTS.find(x => x.code === params.get("code"));
   const root = document.getElementById("product");
 
   if (!p) {
@@ -53,16 +53,20 @@
     document.getElementById("relatedWrap").remove();
   } else {
     document.title = p.name + " | Venora Jewels";
+    const colours = colourCodes(p);
+    let colour = colours.includes(params.get("colour")) ? params.get("colour") : (p.colour || colours[0]);
+
+    // Gold colour first, then the product's other options
     const choices = {};
+    if (colour) choices["Gold colour"] = COLOURS[colour];
     Object.entries(p.options || {}).forEach(([k, v]) => { choices[k] = v[0]; });
-    const images = p.images || [];
 
     root.innerHTML = `
       <p class="crumbs"><a href="index.html">Home</a> / <a href="collections.html">Collections</a> / <a href="collections.html?cat=${encodeURIComponent(p.category)}">${esc(p.category)}</a> / ${esc(p.name)}</p>
       <div class="product">
-        <div>
-          <div class="gallery-main" id="mainImg">${images.length ? `<img src="${esc(images[0])}" alt="${esc(p.name)}">` : artSvg(p.category)}</div>
-          ${images.length > 1 ? `<div class="thumbs">${images.map((src, i) => `<button class="${i === 0 ? "active" : ""}" data-src="${esc(src)}" aria-label="View image ${i + 1}"><img src="${esc(src)}" alt=""></button>`).join("")}</div>` : ""}
+        <div class="gallery">
+          <div class="gallery-main" id="mainImg">${colour ? "" : artSvg(p.category)}</div>
+          <div class="thumbs" id="thumbs"></div>
         </div>
         <div class="product-info">
           <span class="eyebrow">${esc(p.category)}</span>
@@ -70,6 +74,13 @@
           <span class="code">Design code: ${esc(p.code)}</span>
           <p class="price">${esc(priceText(p))}</p>
           <p class="desc">${esc(p.description)}</p>
+          ${colour ? `
+            <div class="opt">
+              <div class="opt-label">Gold colour <b id="colourLabel">${esc(COLOURS[colour])}</b></div>
+              <div class="colour-chips" id="colourChips">
+                ${colours.map(c => `<button type="button" class="${c === colour ? "active" : ""}" data-colour="${c}" aria-pressed="${c === colour}"><i class="dot dot-${c.toLowerCase()}"></i>${esc(COLOURS[c])}</button>`).join("")}
+              </div>
+            </div>` : ""}
           ${Object.entries(p.options || {}).map(([k, vals]) => `
             <div class="opt">
               <div class="opt-label">${esc(k)} <b data-opt-label="${esc(k)}">${esc(vals[0])}</b></div>
@@ -94,7 +105,41 @@
 
     const enquire = document.getElementById("enquire");
     const update = () => { enquire.href = waLink(enquiryText(p, choices)); };
+
+    // Gallery for the selected gold colour
+    const mainImg = document.getElementById("mainImg");
+    const thumbs = document.getElementById("thumbs");
+    function showGallery() {
+      if (!colour) return;
+      const srcs = Array.from({ length: p.views }, (_, i) => photo(p, colour, i + 1));
+      mainImg.innerHTML = `<img src="${srcs[0]}" alt="${esc(p.name)} in ${esc(COLOURS[colour])}">`;
+      thumbs.innerHTML = srcs.length > 1 ? srcs.map((src, i) =>
+        `<button class="${i === 0 ? "active" : ""}" data-src="${src}" aria-label="View image ${i + 1}"><img src="${src}" alt="" loading="lazy"></button>`).join("") : "";
+      // preload the other colours' first photo so switching feels instant
+      colours.filter(c => c !== colour).forEach(c => { new Image().src = photo(p, c, 1); });
+    }
+    showGallery();
     update();
+
+    thumbs.addEventListener("click", e => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      thumbs.querySelectorAll("button").forEach(b => b.classList.toggle("active", b === btn));
+      mainImg.querySelector("img").src = btn.dataset.src;
+    });
+
+    const colourChips = document.getElementById("colourChips");
+    if (colourChips) colourChips.addEventListener("click", e => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      colour = btn.dataset.colour;
+      colourChips.querySelectorAll("button").forEach(b => { b.classList.toggle("active", b === btn); b.setAttribute("aria-pressed", b === btn); });
+      document.getElementById("colourLabel").textContent = COLOURS[colour];
+      choices["Gold colour"] = COLOURS[colour];
+      history.replaceState(null, "", "?code=" + encodeURIComponent(p.code) + "&colour=" + colour);
+      showGallery();
+      update();
+    });
 
     root.querySelectorAll(".chips").forEach(group => {
       group.addEventListener("click", e => {
@@ -107,15 +152,6 @@
         root.querySelector(`[data-opt-label="${CSS.escape(key)}"]`).textContent = btn.dataset.val;
         update();
       });
-    });
-
-    const thumbs = root.querySelector(".thumbs");
-    if (thumbs) thumbs.addEventListener("click", e => {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      thumbs.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      root.querySelector("#mainImg img").src = btn.dataset.src;
     });
 
     const related = PRODUCTS.filter(x => x.category === p.category && x.code !== p.code)

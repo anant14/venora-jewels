@@ -23,7 +23,11 @@
   };
   const artSvg = cat => `<svg class="art" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true">${ART[cat] || ART.default}</svg>`;
 
-  const productUrl = p => "product.html?code=" + encodeURIComponent(p.code);
+  const COLOURS = window.GOLD_COLOURS || { Y: "Yellow Gold", R: "Rose Gold", W: "White Gold" };
+  const colourCodes = p => (p.views ? Object.keys(COLOURS) : []);
+  const photo = (p, c, n) => `images/products/${encodeURIComponent(p.code)}/${c}-${n}.webp`;
+  const cardPhoto = (p, c) => `images/products/${encodeURIComponent(p.code)}/${c}-card.webp`;
+  const productUrl = (p, c) => "product.html?code=" + encodeURIComponent(p.code) + (c ? "&colour=" + c : "");
   const priceText = p => p.price || "Price on request";
   const enquiryText = (p, choices) => {
     let t = `Hello Venora Jewels, I'm interested in "${p.name}" (Code: ${p.code}).`;
@@ -33,26 +37,48 @@
     return t + "\nPlease share price and details.";
   };
 
+  function swatches(p, active) {
+    return colourCodes(p).map(c =>
+      `<button type="button" class="dot dot-${c.toLowerCase()}${c === active ? " active" : ""}" data-colour="${c}" title="${COLOURS[c]}" aria-label="Show in ${COLOURS[c]}" aria-pressed="${c === active}"></button>`
+    ).join("");
+  }
+
   function productCard(p) {
-    const media = p.images && p.images.length
-      ? `<img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy">`
+    const c = p.colour || colourCodes(p)[0];
+    const media = c
+      ? `<img src="${cardPhoto(p, c)}" alt="${esc(p.name)} in ${esc(COLOURS[c])}" loading="lazy">`
       : artSvg(p.category);
-    const optCount = Object.values(p.options || {}).reduce((n, a) => n * a.length, 1);
     return `
-      <article class="card">
-        <a href="${productUrl(p)}" class="card-img">${media}</a>
+      <article class="card" data-code="${esc(p.code)}">
+        <a href="${productUrl(p, c)}" class="card-img">${media}</a>
         <div class="card-body">
           <span class="card-cat">${esc(p.category)}</span>
-          <h3><a href="${productUrl(p)}">${esc(p.name)}</a></h3>
+          <h3><a href="${productUrl(p, c)}">${esc(p.name)}</a></h3>
           <p class="card-short">${esc(p.short)}</p>
-          <p class="card-meta">${optCount > 1 ? optCount + " variations · " : ""}${esc(priceText(p))}</p>
+          ${c ? `<div class="card-colours"><span>Shown in <b>${esc(COLOURS[c])}</b></span><div class="dots">${swatches(p, c)}</div></div>` : ""}
+          <p class="card-meta">${esc(priceText(p))}</p>
           <div class="card-actions">
-            <a class="btn btn-ghost btn-sm" href="${productUrl(p)}">View details</a>
-            <a class="btn btn-wa btn-sm" href="${waLink(enquiryText(p))}" target="_blank" rel="noopener">${ICON.whatsapp} Enquire</a>
+            <a class="btn btn-ghost btn-sm" href="${productUrl(p, c)}">View details</a>
+            <a class="btn btn-wa btn-sm" href="${waLink(enquiryText(p, c ? { "Gold colour": COLOURS[c] } : null))}" target="_blank" rel="noopener">${ICON.whatsapp} Enquire</a>
           </div>
         </div>
       </article>`;
   }
+
+  // Colour swatches on product cards: switch photo, label and links in place
+  document.addEventListener("click", e => {
+    const dot = e.target.closest(".card .dot");
+    if (!dot) return;
+    const card = dot.closest(".card");
+    const p = window.PRODUCTS.find(x => x.code === card.dataset.code);
+    const c = dot.dataset.colour;
+    card.querySelector(".card-img img").src = cardPhoto(p, c);
+    card.querySelector(".card-img img").alt = `${p.name} in ${COLOURS[c]}`;
+    card.querySelector(".card-colours b").textContent = COLOURS[c];
+    card.querySelectorAll(".dot").forEach(d => { d.classList.toggle("active", d === dot); d.setAttribute("aria-pressed", d === dot); });
+    card.querySelectorAll('a[href^="product.html"]').forEach(a => { a.href = productUrl(p, c); });
+    card.querySelector(".btn-wa").href = waLink(enquiryText(p, { "Gold colour": COLOURS[c] }));
+  });
 
   const NAV = [
     ["index.html", "Home", "home"],
@@ -130,6 +156,6 @@
     });
   }
 
-  window.Venora = { esc, waLink, ICON, artSvg, productCard, productUrl, priceText, enquiryText };
+  window.Venora = { esc, waLink, ICON, artSvg, productCard, productUrl, priceText, enquiryText, COLOURS, colourCodes, photo, swatches };
   renderChrome();
 })();
