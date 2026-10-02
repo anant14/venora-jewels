@@ -43,7 +43,11 @@
     ).join("");
   }
 
+  // every product rendered as a card (public or members' catalogue), by code
+  const REGISTRY = new Map();
+
   function productCard(p) {
+    REGISTRY.set(p.code, p);
     const c = p.colour || colourCodes(p)[0];
     const media = c
       ? `<img src="${cardPhoto(p, c)}" alt="${esc(p.name)} in ${esc(COLOURS[c])}" loading="lazy">`
@@ -70,7 +74,7 @@
     const dot = e.target.closest(".card .dot");
     if (!dot) return;
     const card = dot.closest(".card");
-    const p = window.PRODUCTS.find(x => x.code === card.dataset.code);
+    const p = REGISTRY.get(card.dataset.code);
     const c = dot.dataset.colour;
     card.querySelector(".card-img img").src = cardPhoto(p, c);
     card.querySelector(".card-img img").alt = `${p.name} in ${COLOURS[c]}`;
@@ -134,7 +138,7 @@
             ${V.instagram ? `<a href="${esc(V.instagram)}" target="_blank" rel="noopener">${ICON.insta} @jewels_venora</a>` : ""}
           </div>
         </div>
-        <div class="wrap footer-bottom">© ${new Date().getFullYear()} Venora Jewels. All rights reserved.</div>`;
+        <div class="wrap footer-bottom">© ${new Date().getFullYear()} Venora Jewels. All rights reserved. · <a href="privacy.html">Privacy Policy</a> · <a href="account.html">My Account</a></div>`;
     }
 
     const fab = document.createElement("a");

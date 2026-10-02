@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202609301600">
+<link rel="stylesheet" href="css/style.css?v=202610021937">
 <meta name="description" content="Venora Jewels — 100% IGI certified lab grown diamond jewellery in hallmarked 9KT, 14KT & 18KT gold, from Agra.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Venora Jewels">
@@ -39,19 +39,27 @@
 
 <footer id="site-footer"></footer>
 
-<script src="js/config.js?v=202609301600"></script>
-<script src="js/products.js?v=202609301600"></script>
-<script src="js/main.js?v=202609301600"></script>
+<script src="js/config.js?v=202610021937"></script>
+<script src="js/products.js?v=202610021937"></script>
+<script src="js/main.js?v=202610021937"></script>
 <script>
   const { esc, waLink, ICON, artSvg, productCard, priceText, enquiryText, COLOURS, colourCodes, photo, swatches } = Venora;
   const params = new URLSearchParams(location.search);
-  const p = PRODUCTS.find(x => x.code === params.get("code"));
+  const code = params.get("code");
   const root = document.getElementById("product");
 
-  if (!p) {
-    root.innerHTML = `<div class="empty"><h1>Design not found</h1><p>This piece may have moved. Explore our full collection instead.</p><a class="btn btn-dark" href="collections.html">View Collections</a></div>`;
-    document.getElementById("relatedWrap").remove();
-  } else {
+  function notFound(loggedIn) {
+    root.innerHTML = loggedIn === false
+      ? `<div class="empty"><h1>Members-only design</h1><p>Log in to see this design and our full collection.</p><a class="btn btn-dark" href="account.html">Login / Sign up</a></div>`
+      : `<div class="empty"><h1>Design not available</h1><p>This piece may have moved, or isn't shared with your account right now.</p><a class="btn btn-dark" href="collections.html">View Collections</a></div>`;
+    const rel = document.getElementById("relatedWrap"); if (rel) rel.hidden = true;
+  }
+
+  const publicProduct = PRODUCTS.find(x => x.code === code);
+  if (publicProduct) renderProduct(publicProduct);
+  else root.innerHTML = `<p class="center muted" style="padding:60px 0">Loading…</p>`;
+
+  function renderProduct(p) {
     document.title = p.name + " | Venora Jewels";
     const colours = colourCodes(p);
     let colour = colours.includes(params.get("colour")) ? params.get("colour") : (p.colour || colours[0]);
@@ -158,6 +166,21 @@
       .concat(PRODUCTS.filter(x => x.category !== p.category))
       .slice(0, 4);
     document.getElementById("related").innerHTML = related.map(productCard).join("");
+  }
+</script>
+<script src="js/firebase-config.js?v=202610021937"></script>
+<script type="module">
+  import { loadCatalogue } from "./js/auth.js?v=202610021937";
+  // Designs not in the public list: look in the members' catalogue and the customer's private sets
+  if (!PRODUCTS.some(x => x.code === code)) {
+    document.addEventListener("venora-auth", async e => {
+      const st = e.detail;
+      if (!st.user) return notFound(false);
+      const fromSets = st.sets.flatMap(s => s.items || []);
+      const member = st.catalogueOpen ? await loadCatalogue() : [];
+      const p = [...fromSets, ...member].find(x => x.code === code);
+      p ? renderProduct(p) : notFound(true);
+    });
   }
 </script>
 </body>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Account | Venora Jewels</title>
+<meta name="description" content="Log in to Venora Jewels to see our full lab grown diamond catalogue.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=202610021937">
+<link rel="icon" type="image/png" href="images/brand/icon.png">
+<meta name="theme-color" content="#2f0719">
+</head>
+<body data-page="account">
+<header id="site-header"></header>
+
+<main>
+  <div class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">My Account</span>
+      <h1 id="title">Welcome to Venora</h1>
+      <p id="subtitle">Log in to unlock our full catalogue — 20 designs in every category, and exclusive collections curated just for you.</p>
+    </div>
+  </div>
+
+  <section class="tight">
+    <div class="wrap" id="view"><p class="center muted">Loading…</p></div>
+  </section>
+
+  <section class="alt tight" id="myCatalogue" hidden>
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Curated for you</span>
+        <h2>Your exclusive catalogue</h2>
+        <p id="setsNote"></p>
+      </div>
+      <div id="sets"></div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js?v=202610021937"></script>
+<script src="js/products.js?v=202610021937"></script>
+<script src="js/main.js?v=202610021937"></script>
+<script src="js/firebase-config.js?v=202610021937"></script>
+<script type="module">
+  import { login, logout, refresh, ready, isActive, db, doc, setDoc, serverTimestamp } from "./js/auth.js?v=202610021937";
+  const { esc, productCard, ICON } = Venora;
+  const view = document.getElementById("view");
+  const fmtDate = t => { const d = t && t.toDate ? t.toDate() : t ? new Date(t) : null; return d ? d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : ""; };
+  const fmtDateTime = t => { const d = t && t.toDate ? t.toDate() : null; return d ? d.toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }) : ""; };
+  const google = '<svg class="ico" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+
+  function renderLogin() {
+    document.getElementById("myCatalogue").hidden = true;
+    view.innerHTML = `
+      <div class="auth-card">
+        <h2>Login or sign up</h2>
+        <p>One tap with your Google account. New here? We'll ask a few details next.</p>
+        <button class="btn btn-google" id="loginBtn">${google} Continue with Google</button>
+        <ul class="perks">
+          <li>See <b>20 designs in every category</b></li>
+          <li>Get exclusive collections curated for you</li>
+          <li>Faster enquiries on WhatsApp</li>
+        </ul>
+        <p class="form-note">By continuing you agree to our <a href="privacy.html">Privacy Policy</a>.</p>
+        <p class="form-error" id="err" hidden></p>
+      </div>`;
+    document.getElementById("loginBtn").onclick = async () => {
+      try { await login(); } catch (e) { const el = document.getElementById("err"); el.hidden = false; el.textContent = "Login failed: " + (e.message || e.code); }
+    };
+  }
+
+  function renderForm(state, existing) {
+    const u = state.user, p = existing || {};
+    document.getElementById("title").textContent = existing ? "Edit your details" : "Complete your profile";
+    document.getElementById("subtitle").textContent = existing ? "Keep your details up to date." : "Just a few details and you're in. Fields marked * are required.";
+    document.getElementById("myCatalogue").hidden = true;
+    view.innerHTML = `
+      <form class="form auth-form" id="profileForm" novalidate>
+        <div class="row">
+          <div class="field"><label for="name">Full name *</label><input id="name" required minlength="2" maxlength="80" autocomplete="name" value="${esc(p.name || u.displayName || "")}"></div>
+          <div class="field"><label for="mobile">Mobile number *</label><input id="mobile" type="tel" required inputmode="numeric" pattern="[0-9+ ]{10,16}" placeholder="10-digit mobile" autocomplete="tel" value="${esc(p.mobile || "")}"></div>
+        </div>
+        <div class="field"><label for="email">Email ID *</label><input id="email" type="email" value="${esc(u.email)}" readonly title="Your Google account email"></div>
+        <p class="form-sub">Optional — help us celebrate your special days</p>
+        <div class="row">
+          <div class="field"><label for="gender">Gender</label>
+            <select id="gender"><option value="">Prefer not to say</option>${["Female", "Male", "Other"].map(g => `<option${p.gender === g ? " selected" : ""}>${g}</option>`).join("")}</select></div>
+          <div class="field"><label for="age">Age</label><input id="age" type="number" min="10" max="120" inputmode="numeric" value="${p.age ?? ""}"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="dob">Date of birth</label><input id="dob" type="date" value="${esc(p.dob || "")}"></div>
+          <div class="field"><label for="anniversary">Anniversary</label><input id="anniversary" type="date" value="${esc(p.anniversary || "")}"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="consent" ${p.consent ? "checked" : ""} required> I agree to Venora Jewels storing these details to manage my account and contact me, as described in the <a href="privacy.html" target="_blank">Privacy Policy</a>. *</label>
+        <p class="form-error" id="err" hidden></p>
+        <div class="send-row">
+          <button type="submit" class="btn btn-dark">${existing ? "Save changes" : "Create my account"}</button>
+          <button type="button" class="btn btn-ghost" id="cancelBtn">${existing ? "Cancel" : "Log out"}</button>
+        </div>
+      </form>`;
+
+    const dob = document.getElementById("dob"), age = document.getElementById("age");
+    dob.max = new Date().toISOString().slice(0, 10);
+    dob.addEventListener("change", () => {
+      if (!dob.value || age.value) return;
+      const b = new Date(dob.value), n = new Date();
+      age.value = n.getFullYear() - b.getFullYear() - (n < new Date(n.getFullYear(), b.getMonth(), b.getDate()) ? 1 : 0);
+    });
+    document.getElementById("cancelBtn").onclick = () => existing ? render(state) : logout();
+
+    document.getElementById("profileForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const err = document.getElementById("err");
+      const val = id => document.getElementById(id).value.trim();
+      const mobile = val("mobile").replace(/[\s-]/g, "");
+      const problems = [];
+      if (val("name").length < 2) problems.push("Please enter your full name.");
+      if (!/^\+?[0-9]{10,13}$/.test(mobile)) problems.push("Please enter a valid mobile number.");
+      if (age.value && (+age.value < 10 || +age.value > 120)) problems.push("Please enter a valid age.");
+      if (!document.getElementById("consent").checked) problems.push("Please accept the Privacy Policy to continue.");
+      if (problems.length) { err.hidden = false; err.textContent = problems.join(" "); return; }
+      err.hidden = true;
+      const data = {
+        name: val("name"), mobile, email: u.email, consent: true,
+        gender: val("gender") || null, age: age.value ? Math.round(+age.value) : null,
+        dob: val("dob") || null, anniversary: val("anniversary") || null,
+        photoURL: u.photoURL || null,
+        createdAt: existing ? existing.createdAt : serverTimestamp(), updatedAt: serverTimestamp(), lastLoginAt: serverTimestamp()
+      };
+      try {
+        e.submitter.disabled = true;
+        await setDoc(doc(db, "customers", u.uid), data);
+        render(await refresh());
+      } catch (ex) {
+        e.submitter.disabled = false;
+        err.hidden = false; err.textContent = "Could not save: " + (ex.message || ex.code);
+      }
+    });
+  }
+
+  function renderProfile(state) {
+    const p = state.profile;
+    document.getElementById("title").textContent = `Hello, ${p.name.split(" ")[0]}`;
+    document.getElementById("subtitle").textContent = "Your Venora account.";
+    const open = state.catalogueOpen;
+    const until = state.catalogue && state.catalogue.until;
+    view.innerHTML = `
+      <div class="account-grid">
+        <div class="account-card">
+          <h3>Your details</h3>
+          <table class="spec">
+            <tr><th>Name</th><td>${esc(p.name)}</td></tr>
+            <tr><th>Mobile</th><td>${esc(p.mobile)}</td></tr>
+            <tr><th>Email</th><td>${esc(p.email)}</td></tr>
+            ${p.gender ? `<tr><th>Gender</th><td>${esc(p.gender)}</td></tr>` : ""}
+            ${p.age ? `<tr><th>Age</th><td>${esc(p.age)}</td></tr>` : ""}
+            ${p.dob ? `<tr><th>Date of birth</th><td>${fmtDate(p.dob)}</td></tr>` : ""}
+            ${p.anniversary ? `<tr><th>Anniversary</th><td>${fmtDate(p.anniversary)}</td></tr>` : ""}
+          </table>
+          <div class="btn-row mt">
+            <button class="btn btn-ghost btn-sm" id="editBtn">Edit details</button>
+            <button class="btn btn-ghost btn-sm" id="logoutBtn">Log out</button>
+            ${state.isAdmin ? `<a class="btn btn-dark btn-sm" href="admin.html">Admin panel</a>` : ""}
+          </div>
+        </div>
+        <div class="account-card">
+          <h3>Members' catalogue</h3>
+          ${open
+            ? `<p class="status on">● Open${until && !state.isAdmin ? ` until ${fmtDateTime(until)}` : ""}</p>
+               <p>As a member you can browse 20 designs in every category.</p>
+               <a class="btn btn-dark mt" href="collections.html">Browse the full collection</a>`
+            : `<p class="status off">● Currently closed</p>
+               <p>The full catalogue opens from time to time. Message us and we'll let you know — or ask for a private collection.</p>
+               <a class="btn btn-wa mt" data-wa="Hello Venora Jewels, I'm a member (${esc(p.name)}). Please share the catalogue with me.">${ICON.whatsapp} Request access</a>`}
+        </div>
+      </div>`;
+    view.querySelectorAll("[data-wa]").forEach(el => { el.href = Venora.waLink(el.dataset.wa); el.target = "_blank"; el.rel = "noopener"; });
+    document.getElementById("editBtn").onclick = () => renderForm(state, p);
+    document.getElementById("logoutBtn").onclick = () => logout();
+
+    // Sets an admin has shared with this customer
+    const wrap = document.getElementById("myCatalogue");
+    if (state.sets.length) {
+      wrap.hidden = false;
+      document.getElementById("setsNote").textContent = state.access.until
+        ? `Available until ${fmtDateTime(state.access.until)}.` : "Hand-picked by our team, just for you.";
+      document.getElementById("sets").innerHTML = state.sets.map(s => `
+        <div class="set-block">
+          <h3>${esc(s.name)}</h3>${s.note ? `<p class="muted">${esc(s.note)}</p>` : ""}
+          <div class="grid">${(s.items || []).map(productCard).join("")}</div>
+        </div>`).join("");
+    } else {
+      wrap.hidden = true;
+    }
+  }
+
+  function render(state) {
+    if (!state.user) return renderLogin();
+    if (!state.profile) return renderForm(state, null);
+    renderProfile(state);
+  }
+
+  document.addEventListener("venora-auth", e => render(e.detail));
+</script>
+</body>
+</html>

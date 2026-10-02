@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel | Venora Jewels</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=202610021937">
+<link rel="icon" type="image/png" href="images/brand/icon.png">
+<meta name="theme-color" content="#2f0719">
+</head>
+<body data-page="admin">
+<header id="site-header"></header>
+
+<main class="admin">
+  <div class="wrap" id="gate"><p class="center muted" style="padding:80px 0">Loading…</p></div>
+
+  <div class="wrap" id="panel" hidden>
+    <div class="admin-head">
+      <div>
+        <span class="eyebrow">Venora Jewels</span>
+        <h1>Admin panel</h1>
+        <p class="muted" id="who"></p>
+      </div>
+      <div class="admin-stats" id="stats"></div>
+    </div>
+
+    <div class="admin-tabs" role="tablist">
+      <button class="active" data-tab="customers">Customers</button>
+      <button data-tab="switch">Catalogue switch</button>
+      <button data-tab="sets">Catalogue sets</button>
+      <button data-tab="designs">All designs</button>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <section class="admin-tab" id="tab-customers">
+      <div class="toolbar">
+        <input class="admin-search" id="search" type="search" placeholder="Search name, mobile or email">
+        <div class="btn-row">
+          <button class="btn btn-ghost btn-sm" id="reloadBtn">Refresh</button>
+          <button class="btn btn-dark btn-sm" id="csvBtn">Download Excel (CSV)</button>
+        </div>
+      </div>
+      <div class="table-wrap"><table class="admin-table" id="custTable"></table></div>
+    </section>
+
+    <!-- MASTER SWITCH -->
+    <section class="admin-tab" id="tab-switch" hidden>
+      <div class="admin-card">
+        <h2>Members' catalogue</h2>
+        <p class="muted">When ON, every logged-in customer sees the full catalogue (20 designs per category). Visitors who are not logged in always see the public designs only.</p>
+        <div class="switch-status" id="switchStatus"></div>
+        <div class="row">
+          <div class="field"><label for="switchState">Catalogue</label>
+            <select id="switchState"><option value="on">ON — show to all members</option><option value="off">OFF — hide from members</option></select></div>
+          <div class="field"><label for="switchDur">Keep it on for</label><select id="switchDur"></select></div>
+        </div>
+        <div class="field" id="switchCustomWrap" hidden><label for="switchCustom">Turn off automatically at</label><input id="switchCustom" type="datetime-local"></div>
+        <button class="btn btn-dark" id="switchSave">Save</button>
+        <p class="form-note left" id="switchMsg"></p>
+      </div>
+    </section>
+
+    <!-- SETS -->
+    <section class="admin-tab" id="tab-sets" hidden>
+      <div class="toolbar">
+        <p class="muted">A set is a hand-picked group of designs you can share with particular customers for a limited time (from the Customers tab).</p>
+        <button class="btn btn-dark btn-sm" id="newSetBtn">+ New set</button>
+      </div>
+      <div id="setList" class="set-list"></div>
+      <div class="admin-card" id="setEditor" hidden>
+        <h2 id="setEditorTitle">New set</h2>
+        <div class="row">
+          <div class="field"><label for="setName">Set name *</label><input id="setName" maxlength="80" placeholder="e.g. Bridal 2026 — Priya"></div>
+          <div class="field"><label for="setNote">Note for the customer (optional)</label><input id="setNote" maxlength="200"></div>
+        </div>
+        <div class="toolbar">
+          <div class="filters" id="pickFilters"></div>
+          <span class="count" id="pickCount"></span>
+        </div>
+        <div class="picker" id="picker"></div>
+        <div class="btn-row mt">
+          <button class="btn btn-dark" id="setSave">Save set</button>
+          <button class="btn btn-ghost" id="setCancel">Cancel</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ALL DESIGNS -->
+    <section class="admin-tab" id="tab-designs" hidden>
+      <div class="toolbar">
+        <div class="filters" id="designFilters"></div>
+        <span class="count" id="designCount"></span>
+      </div>
+      <div class="grid" id="designGrid"></div>
+    </section>
+  </div>
+</main>
+
+<!-- Grant / revoke access for one customer -->
+<dialog class="admin-dialog" id="accessDlg">
+  <form method="dialog" id="accessForm">
+    <h2>Catalogue access</h2>
+    <p class="muted" id="accessWho"></p>
+    <div class="field"><label>Sets to share</label><div class="check-list" id="accessSets"></div></div>
+    <div class="row">
+      <div class="field"><label for="accessDur">For how long</label><select id="accessDur"></select></div>
+      <div class="field" id="accessCustomWrap" hidden><label for="accessCustom">Until</label><input id="accessCustom" type="datetime-local"></div>
+    </div>
+    <p class="form-error" id="accessErr" hidden></p>
+    <div class="btn-row">
+      <button class="btn btn-dark" value="save" id="accessSave">Give access</button>
+      <button class="btn btn-ghost" value="revoke" id="accessRevoke">Remove access</button>
+      <button class="btn btn-ghost" value="cancel" formnovalidate>Close</button>
+    </div>
+  </form>
+</dialog>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js?v=202610021937"></script>
+<script src="js/products.js?v=202610021937"></script>
+<script src="js/main.js?v=202610021937"></script>
+<script src="js/firebase-config.js?v=202610021937"></script>
+<script type="module">
+  import { ADMINS, login, logout, ready, isActive, loadCatalogue, db, doc, getDoc, setDoc, deleteDoc,
+           collection, getDocs, serverTimestamp, Timestamp } from "./js/auth.js?v=202610021937";
+  const { esc, productCard, COLOURS } = Venora;
+  const $ = id => document.getElementById(id);
+
+  const DURATIONS = [
+    ["1h", "1 hour", 1], ["6h", "6 hours", 6], ["1d", "1 day", 24], ["3d", "3 days", 72], ["7d", "7 days", 168],
+    ["15d", "15 days", 360], ["30d", "30 days", 720], ["90d", "90 days", 2160], ["none", "No time limit", 0], ["custom", "Until a date I choose…", -1]
+  ];
+  const durOptions = sel => DURATIONS.map(([v, l]) => `<option value="${v}"${v === sel ? " selected" : ""}>${l}</option>`).join("");
+  function untilFrom(selectId, customId) {
+    const v = $(selectId).value;
+    if (v === "none") return null;
+    if (v === "custom") { const d = $(customId).value; return d ? Timestamp.fromDate(new Date(d)) : undefined; }
+    const hours = DURATIONS.find(d => d[0] === v)[2];
+    return Timestamp.fromDate(new Date(Date.now() + hours * 3600e3));
+  }
+  const toDate = t => (t && t.toDate ? t.toDate() : t ? new Date(t) : null);
+  const fmt = (t, withTime) => { const d = toDate(t); return d ? d.toLocaleString("en-IN", withTime ? { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" } : { day: "numeric", month: "short", year: "numeric" }) : ""; };
+
+  let customers = [], accessMap = {}, sets = [], designs = [], editingSet = null, accessUid = null;
+
+  /* ---------- gate ---------- */
+  function showGate(state) {
+    $("panel").hidden = true;
+    const gate = $("gate"); gate.hidden = false;
+    if (!state.user) {
+      gate.innerHTML = `<div class="auth-card"><h2>Admin login</h2><p>Sign in with an admin Google account.</p>
+        <button class="btn btn-dark" id="loginBtn">Continue with Google</button></div>`;
+      $("loginBtn").onclick = () => login().catch(e => alert(e.message));
+    } else {
+      gate.innerHTML = `<div class="auth-card"><h2>Not authorised</h2><p>${esc(state.user.email)} is not an admin account.</p>
+        <button class="btn btn-ghost" id="outBtn">Log out</button> <a class="btn btn-dark" href="account.html">My account</a></div>`;
+      $("outBtn").onclick = () => logout();
+    }
+  }
+
+  async function start(state) {
+    if (!state.user || !state.isAdmin) return showGate(state);
+    $("gate").hidden = true; $("panel").hidden = false;
+    $("who").innerHTML = `Signed in as ${esc(state.user.email)} · <a href="#" id="outLink">Log out</a>`;
+    $("outLink").onclick = e => { e.preventDefault(); logout(); };
+    designs = mergeDesigns(await loadCatalogue());
+    await Promise.all([loadCustomers(), loadSwitch(), loadSets()]);
+    renderDesigns("All");
+  }
+
+  /* ---------- tabs ---------- */
+  document.querySelector(".admin-tabs").addEventListener("click", e => {
+    const t = e.target.dataset.tab; if (!t) return;
+    document.querySelectorAll(".admin-tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === t));
+    document.querySelectorAll(".admin-tab").forEach(s => { s.hidden = s.id !== "tab-" + t; });
+  });
+
+  /* ---------- customers ---------- */
+  async function loadCustomers() {
+    const [cs, as] = await Promise.all([getDocs(collection(db, "customers")), getDocs(collection(db, "access"))]);
+    customers = cs.docs.map(d => ({ uid: d.id, ...d.data() }))
+      .sort((a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0));
+    accessMap = Object.fromEntries(as.docs.map(d => [d.id, d.data()]));
+    renderCustomers();
+    renderStats();
+  }
+  // WhatsApp link to a customer (10-digit numbers are assumed to be Indian)
+  const custWa = c => "https://wa.me/" + c.mobile.replace(/^\+/, "").replace(/^(\d{10})$/, "91$1") +
+    "?text=" + encodeURIComponent(`Hello ${c.name.split(" ")[0]}, greetings from Venora Jewels!`);
+  function accessLabel(uid) {
+    const a = accessMap[uid];
+    if (!a || !(a.sets || []).length) return `<span class="pill">None</span>`;
+    const names = (a.sets || []).map(id => (sets.find(s => s.id === id) || {}).name || "deleted set").join(", ");
+    return isActive(a)
+      ? `<span class="pill on" title="${esc(names)}">${a.sets.length} set${a.sets.length > 1 ? "s" : ""}${a.until ? " · till " + fmt(a.until) : ""}</span>`
+      : `<span class="pill off" title="${esc(names)}">Expired ${fmt(a.until)}</span>`;
+  }
+  function renderCustomers() {
+    const q = $("search").value.trim().toLowerCase();
+    const list = customers.filter(c => !q || [c.name, c.mobile, c.email].some(v => (v || "").toLowerCase().includes(q)));
+    $("custTable").innerHTML = `
+      <thead><tr><th>Name</th><th>Mobile</th><th>Email</th><th>Gender</th><th>Age</th><th>Date of birth</th><th>Anniversary</th><th>Joined</th><th>Last login</th><th>Catalogue sets</th><th></th></tr></thead>
+      <tbody>${list.length ? list.map(c => `
+        <tr>
+          <td><b>${esc(c.name)}</b></td>
+          <td><a href="${custWa(c)}" target="_blank" rel="noopener" title="Message on WhatsApp">${esc(c.mobile)}</a></td>
+          <td><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></td>
+          <td>${esc(c.gender || "")}</td><td>${esc(c.age ?? "")}</td>
+          <td>${fmt(c.dob)}</td><td>${fmt(c.anniversary)}</td>
+          <td>${fmt(c.createdAt)}</td><td>${fmt(c.lastLoginAt, true)}</td>
+          <td>${accessLabel(c.uid)}</td>
+          <td><button class="btn btn-ghost btn-sm" data-access="${esc(c.uid)}">Access</button></td>
+        </tr>`).join("") : `<tr><td colspan="11" class="center muted">${customers.length ? "No match." : "No customers yet."}</td></tr>`}</tbody>`;
+  }
+  $("search").addEventListener("input", renderCustomers);
+  $("reloadBtn").onclick = loadCustomers;
+  $("custTable").addEventListener("click", e => { const uid = e.target.dataset.access; if (uid) openAccess(uid); });
+
+  $("csvBtn").onclick = () => {
+    const cols = ["Name", "Mobile", "Email", "Gender", "Age", "Date of birth", "Anniversary", "Joined", "Last login", "Catalogue access until"];
+    const rows = customers.map(c => [c.name, c.mobile, c.email, c.gender || "", c.age ?? "", c.dob || "", c.anniversary || "",
+      fmt(c.createdAt), fmt(c.lastLoginAt, true), accessMap[c.uid] ? (accessMap[c.uid].until ? fmt(accessMap[c.uid].until, true) : "No limit") : ""]);
+    const csv = [cols, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" }));
+    a.download = `venora-customers-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+  };
+
+  function renderStats() {
+    const active = Object.values(accessMap).filter(a => isActive(a) && (a.sets || []).length).length;
+    const week = customers.filter(c => toDate(c.createdAt) > new Date(Date.now() - 7 * 864e5)).length;
+    $("stats").innerHTML = `<div><b>${customers.length}</b><span>Customers</span></div><div><b>${week}</b><span>New this week</span></div><div><b>${active}</b><span>With private sets</span></div>`;
+  }
+
+  /* ---------- access dialog ---------- */
+  function openAccess(uid) {
+    accessUid = uid;
+    const c = customers.find(x => x.uid === uid), a = accessMap[uid] || {};
+    $("accessWho").textContent = `${c.name} · ${c.mobile} · ${c.email}`;
+    $("accessSets").innerHTML = sets.length
+      ? sets.map(s => `<label class="check"><input type="checkbox" value="${esc(s.id)}" ${(a.sets || []).includes(s.id) ? "checked" : ""}> ${esc(s.name)} <span class="muted">(${(s.items || []).length} designs)</span></label>`).join("")
+      : `<p class="muted">No sets yet — create one in the "Catalogue sets" tab first.</p>`;
+    $("accessDur").innerHTML = durOptions("7d");
+    $("accessCustomWrap").hidden = true;
+    $("accessErr").hidden = true;
+    $("accessRevoke").hidden = !accessMap[uid];
+    $("accessDlg").showModal();
+  }
+  $("accessDur").addEventListener("change", () => { $("accessCustomWrap").hidden = $("accessDur").value !== "custom"; });
+  $("accessForm").addEventListener("submit", async e => {
+    const action = e.submitter && e.submitter.value;
+    if (action === "cancel") return;
+    e.preventDefault();
+    const err = $("accessErr");
+    try {
+      if (action === "revoke") {
+        await deleteDoc(doc(db, "access", accessUid));
+        delete accessMap[accessUid];
+      } else {
+        const chosen = [...$("accessSets").querySelectorAll("input:checked")].map(i => i.value);
+        const until = untilFrom("accessDur", "accessCustom");
+        if (!chosen.length) { err.hidden = false; err.textContent = "Tick at least one set."; return; }
+        if (until === undefined) { err.hidden = false; err.textContent = "Choose the end date."; return; }
+        const rec = { enabled: true, sets: chosen, until, grantedBy: (await ready()).user.email, grantedAt: serverTimestamp() };
+        await setDoc(doc(db, "access", accessUid), rec);
+        accessMap[accessUid] = { ...rec, grantedAt: new Date() };
+      }
+      $("accessDlg").close();
+      renderCustomers(); renderStats();
+    } catch (ex) { err.hidden = false; err.textContent = "Could not save: " + ex.message; }
+  });
+
+  /* ---------- master switch ---------- */
+  async function loadSwitch() {
+    const snap = await getDoc(doc(db, "settings", "catalogue"));
+    const s = snap.exists() ? snap.data() : { enabled: false };
+    const on = isActive(s);
+    $("switchStatus").innerHTML = on
+      ? `<p class="status on">● ON${s.until ? ` — turns off automatically on ${fmt(s.until, true)}` : " — no time limit"}</p>`
+      : `<p class="status off">● OFF${s.enabled && s.until ? ` (expired ${fmt(s.until, true)})` : ""}</p>`;
+    $("switchState").value = on ? "on" : "off";
+    $("switchDur").innerHTML = durOptions("7d");
+  }
+  $("switchDur").addEventListener("change", () => { $("switchCustomWrap").hidden = $("switchDur").value !== "custom"; });
+  $("switchState").addEventListener("change", () => { $("switchDur").parentElement.style.visibility = $("switchState").value === "on" ? "" : "hidden"; $("switchCustomWrap").hidden = $("switchState").value !== "on" || $("switchDur").value !== "custom"; });
+  $("switchSave").onclick = async () => {
+    const on = $("switchState").value === "on";
+    const until = on ? untilFrom("switchDur", "switchCustom") : null;
+    if (until === undefined) { $("switchMsg").textContent = "Choose the date and time."; return; }
+    await setDoc(doc(db, "settings", "catalogue"), { enabled: on, until, updatedBy: (await ready()).user.email, updatedAt: serverTimestamp() });
+    $("switchMsg").textContent = "Saved.";
+    loadSwitch();
+  };
+
+  /* ---------- designs ---------- */
+  function mergeDesigns(member) {
+    const seen = new Set(), all = [];
+    [...PRODUCTS.map(p => ({ ...p, tier: "Public" })), ...member.map(p => ({ ...p, tier: "Members" }))].forEach(p => {
+      if (!seen.has(p.code)) { seen.add(p.code); all.push(p); }
+    });
+    return all;
+  }
+  const categories = () => ["All", ...new Set(designs.map(d => d.category))];
+  function renderDesigns(cat) {
+    const list = cat === "All" ? designs : designs.filter(d => d.category === cat);
+    $("designFilters").innerHTML = categories().map(c => `<button data-cat="${esc(c)}" class="${c === cat ? "active" : ""}">${esc(c)}</button>`).join("");
+    $("designCount").textContent = `${list.length} designs (${designs.filter(d => d.tier === "Public").length} public, ${designs.filter(d => d.tier === "Members").length} members-only)`;
+    $("designGrid").innerHTML = list.map(productCard).join("");
+  }
+  $("designFilters").addEventListener("click", e => { if (e.target.dataset.cat) renderDesigns(e.target.dataset.cat); });
+
+  /* ---------- sets ---------- */
+  async function loadSets() {
+    const snap = await getDocs(collection(db, "sets"));
+    sets = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (toDate(b.updatedAt) || 0) - (toDate(a.updatedAt) || 0));
+    const shared = id => Object.values(accessMap).filter(a => (a.sets || []).includes(id) && isActive(a)).length;
+    $("setList").innerHTML = sets.length ? sets.map(s => `
+      <div class="set-row">
+        <div><b>${esc(s.name)}</b><span class="muted"> · ${(s.items || []).length} designs · shared with ${shared(s.id)} customer(s)</span>${s.note ? `<br><span class="muted">${esc(s.note)}</span>` : ""}</div>
+        <div class="btn-row"><button class="btn btn-ghost btn-sm" data-edit="${esc(s.id)}">Edit</button><button class="btn btn-ghost btn-sm" data-del="${esc(s.id)}">Delete</button></div>
+      </div>`).join("") : `<p class="muted">No sets yet.</p>`;
+  }
+  $("setList").addEventListener("click", async e => {
+    if (e.target.dataset.edit) openSet(sets.find(s => s.id === e.target.dataset.edit));
+    if (e.target.dataset.del && confirm("Delete this set? Customers who have it will lose access to it.")) {
+      await deleteDoc(doc(db, "sets", e.target.dataset.del)); loadSets();
+    }
+  });
+  $("newSetBtn").onclick = () => openSet(null);
+  $("setCancel").onclick = () => { $("setEditor").hidden = true; };
+
+  let picked = new Set(), pickCat = "All";
+  function openSet(s) {
+    editingSet = s;
+    picked = new Set((s && s.items || []).map(i => i.code));
+    $("setEditorTitle").textContent = s ? "Edit set" : "New set";
+    $("setName").value = s ? s.name : ""; $("setNote").value = s ? s.note || "" : "";
+    $("setEditor").hidden = false;
+    renderPicker("All");
+    $("setEditor").scrollIntoView({ behavior: "smooth" });
+  }
+  function renderPicker(cat) {
+    pickCat = cat;
+    const list = cat === "All" ? designs : designs.filter(d => d.category === cat);
+    $("pickFilters").innerHTML = categories().map(c => `<button type="button" data-cat="${esc(c)}" class="${c === cat ? "active" : ""}">${esc(c)}</button>`).join("");
+    $("pickCount").textContent = `${picked.size} selected`;
+    $("picker").innerHTML = list.map(d => `
+      <label class="pick${picked.has(d.code) ? " on" : ""}">
+        <input type="checkbox" value="${esc(d.code)}" ${picked.has(d.code) ? "checked" : ""}>
+        <img src="images/products/${encodeURIComponent(d.code)}/${d.colour}-card.webp" alt="" loading="lazy">
+        <span>${esc(d.name)}<small>${esc(d.code)}${d.tier === "Members" ? " · members" : ""}</small></span>
+      </label>`).join("");
+  }
+  $("pickFilters").addEventListener("click", e => { if (e.target.dataset.cat) renderPicker(e.target.dataset.cat); });
+  $("picker").addEventListener("change", e => {
+    const v = e.target.value; e.target.checked ? picked.add(v) : picked.delete(v);
+    e.target.closest(".pick").classList.toggle("on", e.target.checked);
+    $("pickCount").textContent = `${picked.size} selected`;
+  });
+  $("setSave").onclick = async () => {
+    const name = $("setName").value.trim();
+    if (!name) return alert("Please give the set a name.");
+    if (!picked.size) return alert("Pick at least one design.");
+    // store the design details inside the set, so the customer can see them even when the main catalogue is off
+    const items = designs.filter(d => picked.has(d.code)).map(({ tier, ...d }) => d);
+    const id = editingSet ? editingSet.id : name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40) + "-" + Date.now().toString(36);
+    await setDoc(doc(db, "sets", id), { name, note: $("setNote").value.trim(), items, updatedAt: serverTimestamp() });
+    $("setEditor").hidden = true;
+    await loadSets(); renderCustomers();
+  };
+
+  document.addEventListener("venora-auth", e => start(e.detail));
+</script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+rules_version = '2';
+
+// Venora Jewels — who can read and write what.
+//  customers/{uid}   a customer's own profile (they write it; admins read all)
+//  access/{uid}      catalogue sets + expiry granted to a customer (admins only write)
+//  settings/catalogue  master switch {enabled, until} for the members' catalogue
+//  catalogue/{code}  members' catalogue designs (visible while the switch is on)
+//  sets/{setId}      hand-picked design sets an admin can give to particular customers
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in ['jewelsvenora@gmail.com', 'anantbansal2696@gmail.com'];
+    }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function active(rec) {
+      return rec.enabled == true && (!('until' in rec) || rec.until == null || request.time < rec.until);
+    }
+    function catalogueOpen() {
+      return exists(/databases/$(database)/documents/settings/catalogue)
+        && active(get(/databases/$(database)/documents/settings/catalogue).data);
+    }
+
+    function optString(d, k, max) { return !(k in d) || d[k] == null || (d[k] is string && d[k].size() <= max); }
+    function validProfile(d) {
+      return d.keys().hasOnly(['name', 'mobile', 'email', 'gender', 'age', 'dob', 'anniversary',
+                               'consent', 'photoURL', 'createdAt', 'updatedAt', 'lastLoginAt'])
+        && d.name is string && d.name.size() >= 2 && d.name.size() <= 80
+        && d.mobile is string && d.mobile.matches('^\\+?[0-9]{10,13}$')
+        && d.email == request.auth.token.email
+        && d.consent == true
+        && optString(d, 'gender', 30)
+        && (!('age' in d) || d.age == null || (d.age is int && d.age >= 10 && d.age <= 120))
+        && optString(d, 'dob', 10) && optString(d, 'anniversary', 10)
+        && optString(d, 'photoURL', 500);
+    }
+
+    match /customers/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid) && validProfile(request.resource.data);
+      allow update: if (isOwner(uid) && validProfile(request.resource.data)
+                        && request.resource.data.createdAt == resource.data.createdAt)
+                    || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /access/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /settings/{name} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /catalogue/{code} {
+      allow read: if isAdmin() || (signedIn() && catalogueOpen());
+      allow write: if isAdmin();
+    }
+
+    match /sets/{setId} {
+      allow read: if isAdmin() || (signedIn()
+        && exists(/databases/$(database)/documents/access/$(request.auth.uid))
+        && setId in get(/databases/$(database)/documents/access/$(request.auth.uid)).data.sets
+        && active(get(/databases/$(database)/documents/access/$(request.auth.uid)).data));
+      allow write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

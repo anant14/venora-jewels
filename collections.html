@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202609301600">
+<link rel="stylesheet" href="css/style.css?v=202610021937">
 <link rel="canonical" href="https://www.venorajewels.com/collections.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Venora Jewels">
@@ -36,6 +36,7 @@
 
   <section class="tight">
     <div class="wrap">
+      <div class="member-banner" id="memberBanner" hidden></div>
       <div class="toolbar">
         <div class="filters" id="filters"></div>
         <span class="count" id="count"></span>
@@ -57,33 +58,61 @@
 
 <footer id="site-footer"></footer>
 
-<script src="js/config.js?v=202609301600"></script>
-<script src="js/products.js?v=202609301600"></script>
-<script src="js/main.js?v=202609301600"></script>
+<script src="js/config.js?v=202610021937"></script>
+<script src="js/products.js?v=202610021937"></script>
+<script src="js/main.js?v=202610021937"></script>
+<script src="js/firebase-config.js?v=202610021937"></script>
 <script>
-  const { productCard, esc } = Venora;
-  const cats = ["All", ...new Set(PRODUCTS.map(p => p.category))];
+  const { productCard, esc, ICON } = Venora;
+  let designs = PRODUCTS.slice();          // grows when a member's catalogue loads
+  let current = new URLSearchParams(location.search).get("cat") || "All";
   const filtersEl = document.getElementById("filters");
+  const categories = () => ["All", ...new Set(designs.map(p => p.category))];
 
   function show(cat) {
+    const cats = categories();
     if (!cats.includes(cat)) cat = "All";
-    const list = cat === "All" ? PRODUCTS : PRODUCTS.filter(p => p.category === cat);
+    current = cat;
+    const list = cat === "All" ? designs : designs.filter(p => p.category === cat);
+    filtersEl.innerHTML = cats.map(c => `<button data-cat="${esc(c)}" class="${c === cat ? "active" : ""}">${esc(c)}</button>`).join("");
     document.getElementById("grid").innerHTML = list.map(productCard).join("");
     document.getElementById("count").textContent = list.length + " design" + (list.length === 1 ? "" : "s");
     document.getElementById("title").textContent = cat === "All" ? "All Designs" : cat;
     document.title = (cat === "All" ? "Collections" : cat) + " | Venora Jewels";
-    filtersEl.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.cat === cat));
   }
 
-  filtersEl.innerHTML = cats.map(c => `<button data-cat="${esc(c)}">${esc(c)}</button>`).join("");
   filtersEl.addEventListener("click", e => {
     const cat = e.target.dataset.cat;
     if (!cat) return;
     history.replaceState(null, "", cat === "All" ? "collections.html" : "?cat=" + encodeURIComponent(cat));
     show(cat);
   });
-
-  show(new URLSearchParams(location.search).get("cat") || "All");
+  show(current);
+</script>
+<script type="module">
+  import { loadCatalogue } from "./js/auth.js?v=202610021937";
+  const banner = document.getElementById("memberBanner");
+  document.addEventListener("venora-auth", async e => {
+    const st = e.detail;
+    banner.hidden = false;
+    if (!st.user) {
+      banner.innerHTML = `<div><b>See the full collection</b><span>Log in to unlock 20 designs in every category.</span></div><a class="btn btn-dark btn-sm" href="account.html">Login / Sign up</a>`;
+      return;
+    }
+    if (!st.profile && !st.isAdmin) {
+      banner.innerHTML = `<div><b>Almost there</b><span>Complete your profile to unlock the full collection.</span></div><a class="btn btn-dark btn-sm" href="account.html">Complete profile</a>`;
+      return;
+    }
+    if (!st.catalogueOpen) {
+      banner.innerHTML = `<div><b>The members' catalogue is closed right now</b><span>Message us and we'll share designs with you personally.</span></div><a class="btn btn-wa btn-sm" target="_blank" rel="noopener" href="${Venora.waLink("Hello Venora Jewels, please share the full catalogue with me.")}">${Venora.ICON.whatsapp} Request access</a>`;
+      return;
+    }
+    const member = await loadCatalogue();
+    const seen = new Set(PRODUCTS.map(p => p.code));
+    designs = PRODUCTS.concat(member.filter(p => !seen.has(p.code)));
+    banner.innerHTML = `<div><b>${st.isAdmin ? "Admin view" : "Members' catalogue"}</b><span>You're seeing all ${designs.length} designs.</span></div>${st.sets.length ? `<a class="btn btn-ghost btn-sm" href="account.html">Your private sets</a>` : ""}`;
+    show(current);
+  });
 </script>
 </body>
 </html>
