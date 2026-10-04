@@ -117,4 +117,7 @@ function updateHeader(state) {
   }
 }
 
-window.VenoraAuth = { ready, login, logout, refresh, isActive, loadCatalogue, ADMINS };
+/** Current user's Firebase ID token (sent to the private CAD service). */
+export const idToken = () => (auth.currentUser ? auth.currentUser.getIdToken() : Promise.resolve(null));
+
+window.VenoraAuth = { ready, login, logout, refresh, isActive, loadCatalogue, idToken, ADMINS };

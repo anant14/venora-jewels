@@ -53,5 +53,16 @@
     return out;
   };
 
-  window.cadUrl = d => (d.cad ? MEDIA + "/" + d.cad : null);
+  // CAD sheets live in the PRIVATE "venora-cad" bucket, served only to signed-in admins
+  const CAD_SERVICE = "https://venora-cad.jewelsvenora.workers.dev/cad/";
+  window.cadUrl = d => (d.cad ? CAD_SERVICE + d.cad.split("/").map(encodeURIComponent).join("/") : null);
+
+  /** Fetch a design's CAD sheet with the admin's login and return a local object URL. */
+  window.loadCadImage = async function (d) {
+    const token = window.VenoraAuth && await window.VenoraAuth.idToken();
+    if (!token) throw new Error("Please log in as an admin");
+    const res = await fetch(window.cadUrl(d), { headers: { Authorization: "Bearer " + token } });
+    if (!res.ok) throw new Error(res.status === 404 ? "No CAD sheet found" : res.status === 403 ? "Admins only" : "Could not load (" + res.status + ")");
+    return URL.createObjectURL(await res.blob());
+  };
 })();

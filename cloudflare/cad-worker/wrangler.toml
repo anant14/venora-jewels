@@ -1,0 +1,13 @@
+name = "venora-cad"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+# Private bucket holding the CAD sheets (no public access)
+[[r2_buckets]]
+binding = "CAD"
+bucket_name = "venora-cad"
+
+[vars]
+PROJECT_ID = "venora-jewels"
+ADMINS = "jewelsvenora@gmail.com,anantbansal2696@gmail.com"
+ORIGINS = "https://www.venorajewels.com,https://venorajewels.com,http://localhost:8000"

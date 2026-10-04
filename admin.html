@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610041552">
+<link rel="stylesheet" href="css/style.css?v=202610041700">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
 <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
@@ -157,14 +157,14 @@
 
 <footer id="site-footer"></footer>
 
-<script src="js/config.js?v=202610041552"></script>
-<script src="js/products.js?v=202610041552"></script>
-<script src="js/main.js?v=202610041552"></script>
-<script src="js/firebase-config.js?v=202610041552"></script>
-<script src="js/library.js?v=202610041552"></script>
+<script src="js/config.js?v=202610041700"></script>
+<script src="js/products.js?v=202610041700"></script>
+<script src="js/main.js?v=202610041700"></script>
+<script src="js/firebase-config.js?v=202610041700"></script>
+<script src="js/library.js?v=202610041700"></script>
 <script type="module">
   import { ADMINS, login, logout, ready, isActive, loadCatalogue, db, doc, getDoc, setDoc, deleteDoc,
-           collection, getDocs, serverTimestamp, Timestamp } from "./js/auth.js?v=202610041552";
+           collection, getDocs, serverTimestamp, Timestamp } from "./js/auth.js?v=202610041700";
   const { esc, productCard, COLOURS } = Venora;
   const $ = id => document.getElementById(id);
 
@@ -513,11 +513,14 @@
     };
     views();
     $("cadColours").onclick = e => { const btn = e.target.closest("button"); if (btn) { colour = btn.dataset.c; views(); } };
-    const url = cadUrl(d);
-    $("cadSheet").innerHTML = url
-      ? `<div class="cad-head"><b>CAD design sheet</b><span class="pill">Admin only</span></div><a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="CAD design sheet for ${esc(d.code)}"></a>`
+    $("cadSheet").innerHTML = d.cad
+      ? `<div class="cad-head"><b>CAD design sheet</b><span class="pill">Admin only · private</span></div><p class="muted" id="cadLoading">Loading CAD sheet…</p>`
       : `<p class="muted">No CAD sheet for this design.</p>`;
     $("cadDlg").showModal();
+    if (d.cad) loadCadImage(d).then(url => {
+      if ($("cadTitle").textContent !== d.code) return;           // dialog moved on to another design
+      $("cadLoading").outerHTML = `<a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="CAD design sheet for ${esc(d.code)}"></a>`;
+    }).catch(e => { const el = $("cadLoading"); if (el) el.textContent = e.message; });
   }
   $("cadClose").onclick = () => $("cadDlg").close();
 
