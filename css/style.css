@@ -536,3 +536,35 @@ button.dot:hover { transform: scale(1.12); }
 .cad-block { margin-top: 18px; border: 1px dashed var(--gold); padding: 12px; background: var(--surface); }
 .cad-block img { width: 100%; height: auto; display: block; }
 .cad-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: .9rem; }
+
+/* ---------- Virtual try-on ---------- */
+.tryon { display: grid; grid-template-columns: 1.5fr 1fr; gap: 48px; align-items: start; }
+.mode-tabs { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); margin-bottom: 12px; }
+.mode-tabs button { background: none; border: 0; padding: 12px; font-family: var(--sans); font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; color: var(--muted); }
+.mode-tabs button.active { background: var(--wine); color: #fff; }
+.stage-box { position: relative; background: #1d1418; aspect-ratio: 4 / 3; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
+.stage-box canvas { max-width: 100%; max-height: 100%; display: block; cursor: grab; }
+.stage-box canvas.mirror { transform: scaleX(-1); }
+.stage-msg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center; background: var(--cream); }
+.stage-msg h2 { font-size: 2rem; }
+.stage-msg p { color: var(--muted); max-width: 420px; }
+.stage-lost, .stage-status { position: absolute; left: 50%; transform: translateX(-50%); background: rgba(47,7,25,.82); color: #fff; padding: 8px 16px; font-size: .85rem; border-radius: 20px; white-space: nowrap; max-width: 92%; overflow: hidden; text-overflow: ellipsis; }
+.stage-lost { top: 14px; }
+.stage-status { bottom: 14px; }
+.photo-bar { margin-top: 10px; }
+.tryon-panel h1 { font-size: clamp(2rem, 4vw, 2.8rem); margin: 4px 0 6px; }
+.tryon-panel .code { font-size: .82rem; color: var(--muted); letter-spacing: .08em; display: block; margin-bottom: 22px; }
+.view-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.view-chips button { width: 64px; height: 64px; padding: 0; border: 1px solid var(--line); background: #f7f3ee; cursor: pointer; }
+.view-chips button.active { border-color: var(--wine); box-shadow: inset 0 0 0 1px var(--wine); }
+.view-chips img { width: 100%; height: 100%; object-fit: contain; }
+.slider { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 10px; font-size: .88rem; color: var(--muted); margin-bottom: 8px; }
+.slider input { accent-color: var(--wine); width: 100%; }
+.tryon-panel .form-note a { color: var(--wine); text-decoration: underline; }
+@media (max-width: 860px) {
+  .tryon { grid-template-columns: 1fr; gap: 24px; }
+  .stage-box { aspect-ratio: 3 / 4; }
+}
+
+/* Always honour the hidden attribute, even on elements styled with display:flex/grid */
+[hidden] { display: none !important; }

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Try-On | Venora Jewels</title>
+<meta name="description" content="Try on Venora Jewels lab grown diamond jewellery with your camera or a photo.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=202610041732">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+<meta name="theme-color" content="#2f0719">
+</head>
+<body data-page="collections">
+<header id="site-header"></header>
+
+<main>
+  <section class="tight">
+    <div class="wrap" id="tryon">
+      <p class="crumbs"><a href="index.html">Home</a> / <a href="collections.html">Collections</a> / <a id="backLink" href="collections.html">Back to design</a> / Try on</p>
+      <div class="tryon">
+        <div class="tryon-stage">
+          <div class="mode-tabs">
+            <button type="button" data-mode="live">Live camera</button>
+            <button type="button" data-mode="photo">Use a photo</button>
+          </div>
+          <div class="stage-box">
+            <canvas id="stage" width="1280" height="720"></canvas>
+            <video id="tVideo" playsinline muted hidden></video>
+            <div class="stage-msg" id="tStart" hidden>
+              <h2>Virtual try-on</h2>
+              <p id="tHint"></p>
+              <div class="btn-row">
+                <button type="button" class="btn btn-dark" id="tStartCam">Start camera</button>
+                <button type="button" class="btn btn-ghost" id="tStartPhoto">Use a photo</button>
+              </div>
+              <p class="form-note">Your camera and photos stay on your device — nothing is uploaded or saved.</p>
+            </div>
+            <div class="stage-msg" id="tPhotoEmpty" hidden>
+              <p>Upload a clear, well-lit photo of your face, or of your hand for rings and bracelets.</p>
+              <label class="btn btn-dark" for="tFile">Choose a photo</label>
+            </div>
+            <p class="stage-lost" id="tLost" hidden>Looking for you… move into the frame</p>
+            <p class="stage-status" id="tStatus" hidden></p>
+          </div>
+          <div class="photo-bar" id="tPhotoBar" hidden>
+            <label class="btn btn-ghost btn-sm" for="tFile">Choose another photo</label>
+            <input type="file" id="tFile" accept="image/*" hidden>
+          </div>
+        </div>
+
+        <div class="tryon-panel">
+          <span class="eyebrow">Virtual try-on</span>
+          <h1 id="tName"></h1>
+          <span class="code" id="tCode"></span>
+          <div class="opt">
+            <div class="opt-label">Gold colour</div>
+            <div class="colour-chips" id="tColours"></div>
+          </div>
+          <div class="opt">
+            <div class="opt-label">Photo angle</div>
+            <div class="view-chips" id="tViews"></div>
+          </div>
+          <div class="opt">
+            <div class="opt-label">Adjust</div>
+            <label class="slider">Size <input type="range" id="tSize" min="0.4" max="2.2" step="0.02" value="1"></label>
+            <label class="slider">Rotate <input type="range" id="tRotate" min="-60" max="60" step="1" value="0"></label>
+            <p class="form-note left">Drag the jewellery on the picture to move it. <a href="#" id="tReset">Reset</a></p>
+          </div>
+          <div class="product-actions">
+            <button type="button" class="btn btn-dark" id="tSave">Save photo</button>
+            <a class="btn btn-wa" id="tEnquire" target="_blank" rel="noopener">Enquire on WhatsApp</a>
+          </div>
+          <p class="form-note left">Try-on is a preview: size and fit are approximate. Message us for exact measurements.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js?v=202610041732"></script>
+<script src="js/products.js?v=202610041732"></script>
+<script src="js/main.js?v=202610041732"></script>
+<script src="js/firebase-config.js?v=202610041732"></script>
+<script type="module" src="js/auth.js?v=202610041732"></script>
+<script type="module" src="js/tryon.js?v=202610041732"></script>
+</body>
+</html>
