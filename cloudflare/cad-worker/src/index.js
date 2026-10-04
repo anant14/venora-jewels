@@ -58,7 +58,7 @@ export default {
         return new Response("Admins only", { status: 403, headers: cors });
       }
       const key = decodeURIComponent(url.pathname.slice(5));
-      if (!key.endsWith("_cad-sheet.webp")) return new Response("Not found", { status: 404, headers: cors });
+      if (!/_cad-(sheet|render).webp$/.test(key)) return new Response("Not found", { status: 404, headers: cors });
       const obj = await env.CAD.get(key);
       if (!obj) return new Response("Not found", { status: 404, headers: cors });
       return new Response(obj.body, {
