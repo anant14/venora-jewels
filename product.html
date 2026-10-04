@@ -7,18 +7,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610041506">
-<meta name="description" content="Venora Jewels — 100% IGI certified lab grown diamond jewellery in hallmarked 9KT, 14KT & 18KT gold, from Agra.">
+<link rel="stylesheet" href="css/style.css?v=202610041552">
+<meta name="description" content="Venora Jewels — 100% IGI certified lab grown diamond jewellery in hallmarked 9KT, 14KT & 18KT gold, made in Surat.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Venora Jewels">
 <meta property="og:title" content="Venora Jewels">
-<meta property="og:description" content="Venora Jewels — 100% IGI certified lab grown diamond jewellery in hallmarked 9KT, 14KT & 18KT gold, from Agra.">
+<meta property="og:description" content="Venora Jewels — 100% IGI certified lab grown diamond jewellery in hallmarked 9KT, 14KT & 18KT gold, made in Surat.">
 <meta property="og:url" content="https://www.venorajewels.com/product.html">
 <meta property="og:image" content="https://www.venorajewels.com/images/brand/share.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/png" href="images/brand/icon.png">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#2f0719">
 </head>
 <body data-page="collections">
@@ -39,9 +42,9 @@
 
 <footer id="site-footer"></footer>
 
-<script src="js/config.js?v=202610041506"></script>
-<script src="js/products.js?v=202610041506"></script>
-<script src="js/main.js?v=202610041506"></script>
+<script src="js/config.js?v=202610041552"></script>
+<script src="js/products.js?v=202610041552"></script>
+<script src="js/main.js?v=202610041552"></script>
 <script>
   const { esc, waLink, ICON, artSvg, productCard, priceText, enquiryText, COLOURS, colourCodes, photo, thumbPhoto, swatches } = Venora;
   const params = new URLSearchParams(location.search);
@@ -60,9 +63,12 @@
   else root.innerHTML = `<p class="center muted" style="padding:60px 0">Loading…</p>`;
 
   function renderProduct(p) {
+    // library designs may have no written text yet — fall back to the standard wording
+    p = { options: { "Gold purity": ["14KT", "18KT", "9KT"] }, details: { "Diamond": "Lab grown, IGI certified" },
+          ...p, description: p.description || Venora.DEFAULT_DESC };
     document.title = p.name + " | Venora Jewels";
     const colours = colourCodes(p);
-    let colour = colours.includes(params.get("colour")) ? params.get("colour") : (p.colour || colours[0]);
+    let colour = colours.includes(params.get("colour")) ? params.get("colour") : (colours.includes(p.colour) ? p.colour : colours[0]);
 
     // Gold colour first, then the product's other options
     const choices = {};
@@ -118,7 +124,10 @@
     const mainImg = document.getElementById("mainImg");
     const thumbs = document.getElementById("thumbs");
     function showGallery() {
-      if (!colour) return;
+      if (!colour) {
+        if (p.photo) { mainImg.innerHTML = `<img src="${photo(p)}" alt="${esc(p.name)}">`; thumbs.innerHTML = ""; }
+        return;
+      }
       const views = Array.from({ length: p.views }, (_, i) => i + 1);
       mainImg.innerHTML = `<img src="${photo(p, colour, 1)}" alt="${esc(p.name)} in ${esc(COLOURS[colour])}">`;
       thumbs.innerHTML = views.length > 1 ? views.map(n =>
@@ -168,20 +177,36 @@
     document.getElementById("related").innerHTML = related.map(productCard).join("");
   }
 </script>
-<script src="js/firebase-config.js?v=202610041506"></script>
+<script src="js/firebase-config.js?v=202610041552"></script>
+<script src="js/library.js?v=202610041552"></script>
 <script type="module">
-  import { loadCatalogue } from "./js/auth.js?v=202610041506";
-  // Designs not in the public list: look in the members' catalogue and the customer's private sets
-  if (!PRODUCTS.some(x => x.code === code)) {
-    document.addEventListener("venora-auth", async e => {
-      const st = e.detail;
+  import { loadCatalogue } from "./js/auth.js?v=202610041552";
+  let shown = false;
+  document.addEventListener("venora-auth", async e => {
+    const st = e.detail;
+    // Designs not in the public list: members' catalogue, the customer's private sets, or (admins) the full library
+    if (!PRODUCTS.some(x => x.code === code) && !shown) {
       if (!st.user) return notFound(false);
       const fromSets = st.sets.flatMap(s => s.items || []);
       const member = st.catalogueOpen ? await loadCatalogue() : [];
-      const p = [...fromSets, ...member].find(x => x.code === code);
-      p ? renderProduct(p) : notFound(true);
-    });
-  }
+      let p = [...fromSets, ...member].find(x => x.code === code);
+      if (!p && st.isAdmin) p = (await loadLibrary().catch(() => [])).find(x => x.code === code);
+      if (!p) return notFound(true);
+      renderProduct(window.clientItem(p));
+      shown = true;
+    }
+    // CAD sheet: admins only
+    if (st.isAdmin && !document.getElementById("cadBlock")) {
+      const item = (await loadLibrary().catch(() => [])).find(x => x.code === code);
+      const url = item && cadUrl(item);
+      const gallery = document.querySelector("#product .gallery");
+      if (url && gallery) gallery.insertAdjacentHTML("beforeend", `
+        <div class="cad-block" id="cadBlock">
+          <div class="cad-head"><b>CAD design sheet</b><span class="pill">Admin only</span></div>
+          <a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="CAD design sheet for ${Venora.esc(code)}" loading="lazy"></a>
+        </div>`);
+    }
+  });
 </script>
 </body>
 </html>

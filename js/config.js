@@ -11,7 +11,7 @@ window.VENORA = {
   email: "jewelsvenora@gmail.com",
   instagram: "https://www.instagram.com/jewels_venora/",
   hours: "Mon – Sat, 11:00 am – 8:00 pm",
-  location: "Agra, India",
+  location: "Studio in Noida · Factory in Surat",
 
   // Product photos are served from Cloudflare R2 (bucket "venora-media")
   media: "https://pub-6c4678341d734a4aa0ce46f8467939d7.r2.dev"

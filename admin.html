@@ -8,8 +8,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610041506">
-<link rel="icon" type="image/png" href="images/brand/icon.png">
+<link rel="stylesheet" href="css/style.css?v=202610041552">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#2f0719">
 </head>
 <body data-page="admin">
@@ -32,7 +35,8 @@
       <button class="active" data-tab="customers">Customers</button>
       <button data-tab="switch">Catalogue switch</button>
       <button data-tab="sets">Catalogue sets</button>
-      <button data-tab="designs">All designs</button>
+      <button data-tab="designs">Website designs</button>
+      <button data-tab="library">R2 Library + CAD</button>
     </div>
 
     <!-- CUSTOMERS -->
@@ -77,11 +81,21 @@
           <div class="field"><label for="setName">Set name *</label><input id="setName" maxlength="80" placeholder="e.g. Bridal 2026 — Priya"></div>
           <div class="field"><label for="setNote">Note for the customer (optional)</label><input id="setNote" maxlength="200"></div>
         </div>
+        <p class="muted" id="pickSource"></p>
         <div class="toolbar">
           <div class="filters" id="pickFilters"></div>
+          <input class="admin-search" id="pickSearch" type="search" placeholder="Search name, code or lot">
+        </div>
+        <div class="pick-bar">
           <span class="count" id="pickCount"></span>
+          <div class="btn-row">
+            <button type="button" class="btn btn-dark btn-sm" id="pickAll"></button>
+            <button type="button" class="btn btn-ghost btn-sm" id="pickNone"></button>
+            <label class="check"><input type="checkbox" id="pickOnlySel"> Show selected only</label>
+          </div>
         </div>
         <div class="picker" id="picker"></div>
+        <div class="center mt"><button type="button" class="btn btn-ghost btn-sm" id="pickMore" hidden>Show more</button></div>
         <div class="btn-row mt">
           <button class="btn btn-dark" id="setSave">Save set</button>
           <button class="btn btn-ghost" id="setCancel">Cancel</button>
@@ -89,7 +103,18 @@
       </div>
     </section>
 
-    <!-- ALL DESIGNS -->
+    <!-- R2 LIBRARY (admin only, with CAD sheets) -->
+    <section class="admin-tab" id="tab-library" hidden>
+      <div class="toolbar">
+        <div class="filters" id="libFilters"></div>
+        <input class="admin-search" id="libSearch" type="search" placeholder="Search design code or lot">
+      </div>
+      <p class="muted" id="libCount">Loading the library from Cloudflare R2…</p>
+      <div class="lib-grid" id="libGrid"></div>
+      <div class="center mt"><button class="btn btn-ghost" id="libMore" hidden>Show more</button></div>
+    </section>
+
+    <!-- WEBSITE DESIGNS -->
     <section class="admin-tab" id="tab-designs" hidden>
       <div class="toolbar">
         <div class="filters" id="designFilters"></div>
@@ -119,15 +144,27 @@
   </form>
 </dialog>
 
+<!-- Photos + CAD sheet of one library design (admin only) -->
+<dialog class="admin-dialog cad-dialog" id="cadDlg">
+  <div class="cad-dlg-head">
+    <div><h2 id="cadTitle"></h2><p class="muted" id="cadMeta"></p></div>
+    <button class="btn btn-ghost btn-sm" id="cadClose">Close</button>
+  </div>
+  <div class="colour-chips" id="cadColours"></div>
+  <div class="cad-views" id="cadViews"></div>
+  <div class="cad-block" id="cadSheet"></div>
+</dialog>
+
 <footer id="site-footer"></footer>
 
-<script src="js/config.js?v=202610041506"></script>
-<script src="js/products.js?v=202610041506"></script>
-<script src="js/main.js?v=202610041506"></script>
-<script src="js/firebase-config.js?v=202610041506"></script>
+<script src="js/config.js?v=202610041552"></script>
+<script src="js/products.js?v=202610041552"></script>
+<script src="js/main.js?v=202610041552"></script>
+<script src="js/firebase-config.js?v=202610041552"></script>
+<script src="js/library.js?v=202610041552"></script>
 <script type="module">
   import { ADMINS, login, logout, ready, isActive, loadCatalogue, db, doc, getDoc, setDoc, deleteDoc,
-           collection, getDocs, serverTimestamp, Timestamp } from "./js/auth.js?v=202610041506";
+           collection, getDocs, serverTimestamp, Timestamp } from "./js/auth.js?v=202610041552";
   const { esc, productCard, COLOURS } = Venora;
   const $ = id => document.getElementById(id);
 
@@ -146,7 +183,7 @@
   const toDate = t => (t && t.toDate ? t.toDate() : t ? new Date(t) : null);
   const fmt = (t, withTime) => { const d = toDate(t); return d ? d.toLocaleString("en-IN", withTime ? { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" } : { day: "numeric", month: "short", year: "numeric" }) : ""; };
 
-  let customers = [], accessMap = {}, sets = [], designs = [], editingSet = null, accessUid = null;
+  let customers = [], accessMap = {}, sets = [], designs = [], library = [], editingSet = null, accessUid = null;
 
   /* ---------- gate ---------- */
   function showGate(state) {
@@ -171,6 +208,13 @@
     designs = mergeDesigns(await loadCatalogue());
     await Promise.all([loadCustomers(), loadSwitch(), loadSets()]);
     renderDesigns("All");
+    // the full R2 library (3,800+ designs) loads in the background
+    loadLibrary().then(items => {
+      library = items;
+      const byCode = new Map(items.map(i => [i.code, i]));
+      designs.forEach(d => { const l = byCode.get(d.code); if (l) d.cad = l.cad; });
+      renderLibrary(); if (!$("setEditor").hidden) renderPicker();
+    }).catch(e => { $("libCount").textContent = "Could not load the R2 library: " + e.message; });
   }
 
   /* ---------- tabs ---------- */
@@ -335,45 +379,147 @@
   $("newSetBtn").onclick = () => openSet(null);
   $("setCancel").onclick = () => { $("setEditor").hidden = true; };
 
-  let picked = new Set(), pickCat = "All";
+  /* Set editor: pick from the website designs plus the full R2 library */
+  const PAGE = 120;
+  let picked = new Set(), pickCat = "All", pickLimit = PAGE, pickedItems = new Map();
+
+  function pool() {
+    const seen = new Set(designs.map(d => d.code));
+    return designs.concat(library.filter(l => !seen.has(l.code)).map(l => ({ ...l, tier: "Library" })));
+  }
+  const matches = (d, cat, q) => (cat === "All" || d.category === cat) &&
+    (!q || [d.code, d.name, d.lot].some(v => (v || "").toLowerCase().includes(q)));
+  function catButtons(list, cat) {
+    const counts = {};
+    list.forEach(d => { counts[d.category] = (counts[d.category] || 0) + 1; });
+    return ["All", ...Object.keys(counts)].map(c =>
+      `<button type="button" data-cat="${esc(c)}" class="${c === cat ? "active" : ""}">${esc(c)} <small>${c === "All" ? list.length : counts[c]}</small></button>`).join("");
+  }
+
   function openSet(s) {
     editingSet = s;
     picked = new Set((s && s.items || []).map(i => i.code));
+    pickedItems = new Map((s && s.items || []).map(i => [i.code, i]));   // keep stored items even if not in the pool
     $("setEditorTitle").textContent = s ? "Edit set" : "New set";
     $("setName").value = s ? s.name : ""; $("setNote").value = s ? s.note || "" : "";
+    $("pickSearch").value = ""; $("pickOnlySel").checked = false;
+    pickCat = "All"; pickLimit = PAGE;
     $("setEditor").hidden = false;
-    renderPicker("All");
+    renderPicker();
     $("setEditor").scrollIntoView({ behavior: "smooth" });
   }
-  function renderPicker(cat) {
-    pickCat = cat;
-    const list = cat === "All" ? designs : designs.filter(d => d.category === cat);
-    $("pickFilters").innerHTML = categories().map(c => `<button type="button" data-cat="${esc(c)}" class="${c === cat ? "active" : ""}">${esc(c)}</button>`).join("");
-    $("pickCount").textContent = `${picked.size} selected`;
-    $("picker").innerHTML = list.map(d => `
+  function filtered() {
+    const q = $("pickSearch").value.trim().toLowerCase();
+    return pool().filter(d => matches(d, pickCat, q) && (!$("pickOnlySel").checked || picked.has(d.code)));
+  }
+  function updatePickCount(list) {
+    $("pickCount").textContent = `${picked.size} selected in total · ${list.filter(d => picked.has(d.code)).length} of ${list.length} here`;
+  }
+  function renderPicker() {
+    const all = pool(), list = filtered();
+    $("pickSource").textContent = library.length
+      ? `Choose from ${all.length} designs: website designs + your full R2 library.`
+      : "Loading your full R2 library… (website designs are shown meanwhile)";
+    $("pickFilters").innerHTML = catButtons(all, pickCat);
+    const label = pickCat === "All" ? "all shown" : `all ${pickCat}`;
+    $("pickAll").textContent = `Select ${label} (${list.length})`;
+    $("pickNone").textContent = `Clear ${label}`;
+    updatePickCount(list);
+    $("picker").innerHTML = list.slice(0, pickLimit).map(d => `
       <label class="pick${picked.has(d.code) ? " on" : ""}">
         <input type="checkbox" value="${esc(d.code)}" ${picked.has(d.code) ? "checked" : ""}>
         <img src="${Venora.cardPhoto(d, d.colour)}" alt="" loading="lazy">
-        <span>${esc(d.name)}<small>${esc(d.code)}${d.tier === "Members" ? " · members" : ""}</small></span>
-      </label>`).join("");
+        <span>${esc(d.name)}<small>${esc(d.code)} · ${d.tier === "Library" ? esc(d.lot || "library") : d.tier.toLowerCase()}</small></span>
+      </label>`).join("") || `<p class="muted" style="padding:20px">No designs match.</p>`;
+    $("pickMore").hidden = list.length <= pickLimit;
+    $("pickMore").textContent = `Show more (${list.length - pickLimit} more)`;
   }
-  $("pickFilters").addEventListener("click", e => { if (e.target.dataset.cat) renderPicker(e.target.dataset.cat); });
+  $("pickFilters").addEventListener("click", e => {
+    const btn = e.target.closest("button"); if (!btn) return;
+    pickCat = btn.dataset.cat; pickLimit = PAGE; renderPicker();
+  });
+  $("pickSearch").addEventListener("input", () => { pickLimit = PAGE; renderPicker(); });
+  $("pickOnlySel").addEventListener("change", () => { pickLimit = PAGE; renderPicker(); });
+  $("pickMore").onclick = () => { pickLimit += PAGE * 2; renderPicker(); };
+  $("pickAll").onclick = () => { filtered().forEach(d => picked.add(d.code)); renderPicker(); };
+  $("pickNone").onclick = () => { filtered().forEach(d => picked.delete(d.code)); renderPicker(); };
   $("picker").addEventListener("change", e => {
     const v = e.target.value; e.target.checked ? picked.add(v) : picked.delete(v);
     e.target.closest(".pick").classList.toggle("on", e.target.checked);
-    $("pickCount").textContent = `${picked.size} selected`;
+    updatePickCount(filtered());
   });
   $("setSave").onclick = async () => {
     const name = $("setName").value.trim();
     if (!name) return alert("Please give the set a name.");
     if (!picked.size) return alert("Pick at least one design.");
-    // store the design details inside the set, so the customer can see them even when the main catalogue is off
-    const items = designs.filter(d => picked.has(d.code)).map(({ tier, ...d }) => d);
+    // store client-safe copies of the designs inside the set (never the CAD sheet),
+    // so the customer can see them even when the main catalogue is off
+    const byCode = new Map(pool().map(d => [d.code, d]));
+    const items = [...picked].map(c => byCode.get(c) || pickedItems.get(c)).filter(Boolean).map(clientItem);
+    const size = new Blob([JSON.stringify(items)]).size;
+    if (size > 900000) return alert(`This set is too large (${items.length} designs). Please split it into two sets of about ${Math.floor(items.length * 850000 / size)} designs each.`);
     const id = editingSet ? editingSet.id : name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40) + "-" + Date.now().toString(36);
-    await setDoc(doc(db, "sets", id), { name, note: $("setNote").value.trim(), items, updatedAt: serverTimestamp() });
-    $("setEditor").hidden = true;
-    await loadSets(); renderCustomers();
+    $("setSave").disabled = true;
+    try {
+      await setDoc(doc(db, "sets", id), { name, note: $("setNote").value.trim(), items, updatedAt: serverTimestamp() });
+      $("setEditor").hidden = true;
+      await loadSets(); renderCustomers();
+    } catch (ex) { alert("Could not save the set: " + ex.message); }
+    $("setSave").disabled = false;
   };
+
+  /* ---------- R2 library tab (admin only: photos + CAD sheets) ---------- */
+  let libCat = "All", libLimit = 60;
+  function libFiltered() {
+    const q = $("libSearch").value.trim().toLowerCase();
+    return library.filter(d => matches(d, libCat, q));
+  }
+  function renderLibrary() {
+    const list = libFiltered(), withCad = library.filter(d => d.cad).length;
+    $("libFilters").innerHTML = catButtons(library, libCat);
+    $("libCount").textContent = `${list.length} designs shown · ${library.length} in the library · ${withCad} with CAD sheets`;
+    $("libGrid").innerHTML = list.slice(0, libLimit).map(d => `
+      <div class="lib-card">
+        <button class="lib-img${Venora.zoomClass(d)}" data-open="${esc(d.code)}"><img src="${Venora.cardPhoto(d, d.colour)}" alt="${esc(d.code)}" loading="lazy"></button>
+        <div class="lib-body">
+          <b>${esc(d.code)}</b>
+          <small>${esc(d.category)}${d.lot ? " · " + esc(d.lot) : ""}</small>
+          <div class="lib-row">
+            <span class="dots">${Venora.colourCodes(d).map(c => `<i class="dot dot-${c.toLowerCase()}" title="${COLOURS[c]}"></i>`).join("")}</span>
+            ${d.cad ? `<span class="pill on">CAD</span>` : `<span class="pill">No CAD</span>`}
+          </div>
+          <button class="btn btn-ghost btn-sm" data-open="${esc(d.code)}">Photos &amp; CAD</button>
+        </div>
+      </div>`).join("");
+    $("libMore").hidden = list.length <= libLimit;
+    $("libMore").textContent = `Show more (${list.length - libLimit} more)`;
+  }
+  $("libFilters").addEventListener("click", e => { const btn = e.target.closest("button"); if (!btn) return; libCat = btn.dataset.cat; libLimit = 60; renderLibrary(); });
+  $("libSearch").addEventListener("input", () => { libLimit = 60; renderLibrary(); });
+  $("libMore").onclick = () => { libLimit += 120; renderLibrary(); };
+  $("libGrid").addEventListener("click", e => { const btn = e.target.closest("[data-open]"); if (btn) openCad(library.find(d => d.code === btn.dataset.open)); });
+
+  function openCad(d) {
+    if (!d) return;
+    const colours = Venora.colourCodes(d);
+    let colour = colours.includes(d.colour) ? d.colour : colours[0];
+    $("cadTitle").textContent = d.code;
+    $("cadMeta").innerHTML = `${esc(d.category)}${d.lot ? " · " + esc(d.lot) : ""} · <a href="product.html?code=${encodeURIComponent(d.code)}" target="_blank" rel="noopener">Open product page</a>`;
+    const views = () => {
+      const n = colour ? d.views : 1;
+      $("cadViews").innerHTML = Array.from({ length: n }, (_, i) =>
+        `<a href="${Venora.photo(d, colour, i + 1)}" target="_blank" rel="noopener"><img src="${Venora.thumbPhoto(d, colour, i + 1)}" alt="View ${i + 1}" loading="lazy"></a>`).join("");
+      $("cadColours").innerHTML = colours.map(c => `<button type="button" data-c="${c}" class="${c === colour ? "active" : ""}"><i class="dot dot-${c.toLowerCase()}"></i>${COLOURS[c]}</button>`).join("");
+    };
+    views();
+    $("cadColours").onclick = e => { const btn = e.target.closest("button"); if (btn) { colour = btn.dataset.c; views(); } };
+    const url = cadUrl(d);
+    $("cadSheet").innerHTML = url
+      ? `<div class="cad-head"><b>CAD design sheet</b><span class="pill">Admin only</span></div><a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="CAD design sheet for ${esc(d.code)}"></a>`
+      : `<p class="muted">No CAD sheet for this design.</p>`;
+    $("cadDlg").showModal();
+  }
+  $("cadClose").onclick = () => $("cadDlg").close();
 
   document.addEventListener("venora-auth", e => start(e.detail));
 </script>

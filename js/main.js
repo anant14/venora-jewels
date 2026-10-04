@@ -24,7 +24,8 @@
   const artSvg = cat => `<svg class="art" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true">${ART[cat] || ART.default}</svg>`;
 
   const COLOURS = window.GOLD_COLOURS || { Y: "Yellow Gold", R: "Rose Gold", W: "White Gold" };
-  const colourCodes = p => (p.views ? Object.keys(COLOURS) : []);
+  // gold colours a design is photographed in (most have all three; some library items fewer, chains none)
+  const colourCodes = p => (p.views ? (p.colours || Object.keys(COLOURS)) : []);
   // Photos live in Cloudflare R2: <media>/<category-folder>/<code>/<code>_<gold>_view-<n>[_thumb].webp
   const MEDIA = (V.media || "").replace(/\/$/, "");
   const CAT_FOLDER = { Earrings: "earrings", Rings: "ladies-rings", Pendants: "pendants", Necklaces: "necklaces", Bracelets: "bracelets" };
@@ -34,12 +35,16 @@
     const code = encodeURIComponent(p.code);
     return `${MEDIA}/${folder(p)}/${code}/${code}_${GOLD_FOLDER[c]}_view-${n}${thumb ? "_thumb" : ""}.webp`;
   };
-  const photo = (p, c, n) => mediaUrl(p, c, n, false);
-  const thumbPhoto = (p, c, n) => mediaUrl(p, c, n, true);
-  const cardPhoto = (p, c) => mediaUrl(p, c, 1, true);
+  // designs with a single photo (e.g. chains) carry its path in p.photo / p.thumb
+  const photo = (p, c, n) => (c ? mediaUrl(p, c, n, false) : `${MEDIA}/${p.photo}`);
+  const thumbPhoto = (p, c, n) => (c ? mediaUrl(p, c, n, true) : `${MEDIA}/${p.thumb || p.photo}`);
+  const cardPhoto = (p, c) => (c ? mediaUrl(p, c, 1, true) : `${MEDIA}/${p.thumb || p.photo}`);
   const zoomClass = p => ["pendants", "necklaces"].includes(folder(p)) ? " zoom-" + folder(p) : "";
   const productUrl = (p, c) => "product.html?code=" + encodeURIComponent(p.code) + (c ? "&colour=" + c : "");
   const priceText = p => p.price || "Price on request";
+  // defaults for library designs that have no written description yet
+  const DEFAULT_SHORT = "Lab grown diamonds, made to order in your gold.";
+  const DEFAULT_DESC = "Crafted with IGI certified lab grown diamonds and available in hallmarked 9KT, 14KT and 18KT gold — in yellow, rose or white. Message us on WhatsApp for price, sizes and customisation.";
   const enquiryText = (p, choices) => {
     let t = `Hello Venora Jewels, I'm interested in "${p.name}" (Code: ${p.code}).`;
     if (choices && Object.keys(choices).length) {
@@ -59,9 +64,9 @@
 
   function productCard(p) {
     REGISTRY.set(p.code, p);
-    const c = p.colour || colourCodes(p)[0];
-    const media = c
-      ? `<img src="${cardPhoto(p, c)}" alt="${esc(p.name)} in ${esc(COLOURS[c])}" loading="lazy">`
+    const c = colourCodes(p).includes(p.colour) ? p.colour : colourCodes(p)[0];
+    const media = c || p.photo
+      ? `<img src="${cardPhoto(p, c)}" alt="${esc(p.name)}${c ? " in " + esc(COLOURS[c]) : ""}" loading="lazy">`
       : artSvg(p.category);
     return `
       <article class="card" data-code="${esc(p.code)}">
@@ -69,7 +74,7 @@
         <div class="card-body">
           <span class="card-cat">${esc(p.category)}</span>
           <h3><a href="${productUrl(p, c)}">${esc(p.name)}</a></h3>
-          <p class="card-short">${esc(p.short)}</p>
+          <p class="card-short">${esc(p.short || DEFAULT_SHORT)}</p>
           ${c ? `<div class="card-colours"><span>Shown in <b>${esc(COLOURS[c])}</b></span><div class="dots">${swatches(p, c)}</div></div>` : ""}
           <p class="card-meta">${esc(priceText(p))}</p>
           <div class="card-actions">
@@ -131,7 +136,7 @@
         <div class="wrap footer-grid">
           <div>
             <a href="index.html" class="logo">VENORA<span>.</span><small>JEWELS</small></a>
-            <p class="footer-tag"><em>Redefining Luxury, Affordably.</em><br>100% IGI certified lab grown diamond jewellery from a family with over 200 years of jewellery heritage in Agra.</p>
+            <p class="footer-tag"><em>Redefining Luxury, Affordably.</em><br>100% IGI certified lab grown diamond jewellery — made in our Surat factory, born in Noida.</p>
           </div>
           <div>
             <h4>Explore</h4>
@@ -171,6 +176,6 @@
     });
   }
 
-  window.Venora = { esc, waLink, ICON, artSvg, productCard, productUrl, priceText, enquiryText, COLOURS, colourCodes, photo, thumbPhoto, cardPhoto, zoomClass, swatches };
+  window.Venora = { DEFAULT_DESC, esc, waLink, ICON, artSvg, productCard, productUrl, priceText, enquiryText, COLOURS, colourCodes, photo, thumbPhoto, cardPhoto, zoomClass, swatches };
   renderChrome();
 })();
