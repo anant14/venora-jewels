@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610021937">
+<link rel="stylesheet" href="css/style.css?v=202610041506">
 <meta name="description" content="Venora Jewels — 100% IGI certified lab grown diamond jewellery in hallmarked 9KT, 14KT & 18KT gold, from Agra.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Venora Jewels">
@@ -39,11 +39,11 @@
 
 <footer id="site-footer"></footer>
 
-<script src="js/config.js?v=202610021937"></script>
-<script src="js/products.js?v=202610021937"></script>
-<script src="js/main.js?v=202610021937"></script>
+<script src="js/config.js?v=202610041506"></script>
+<script src="js/products.js?v=202610041506"></script>
+<script src="js/main.js?v=202610041506"></script>
 <script>
-  const { esc, waLink, ICON, artSvg, productCard, priceText, enquiryText, COLOURS, colourCodes, photo, swatches } = Venora;
+  const { esc, waLink, ICON, artSvg, productCard, priceText, enquiryText, COLOURS, colourCodes, photo, thumbPhoto, swatches } = Venora;
   const params = new URLSearchParams(location.search);
   const code = params.get("code");
   const root = document.getElementById("product");
@@ -119,10 +119,10 @@
     const thumbs = document.getElementById("thumbs");
     function showGallery() {
       if (!colour) return;
-      const srcs = Array.from({ length: p.views }, (_, i) => photo(p, colour, i + 1));
-      mainImg.innerHTML = `<img src="${srcs[0]}" alt="${esc(p.name)} in ${esc(COLOURS[colour])}">`;
-      thumbs.innerHTML = srcs.length > 1 ? srcs.map((src, i) =>
-        `<button class="${i === 0 ? "active" : ""}" data-src="${src}" aria-label="View image ${i + 1}"><img src="${src}" alt="" loading="lazy"></button>`).join("") : "";
+      const views = Array.from({ length: p.views }, (_, i) => i + 1);
+      mainImg.innerHTML = `<img src="${photo(p, colour, 1)}" alt="${esc(p.name)} in ${esc(COLOURS[colour])}">`;
+      thumbs.innerHTML = views.length > 1 ? views.map(n =>
+        `<button class="${n === 1 ? "active" : ""}" data-src="${photo(p, colour, n)}" aria-label="View image ${n}"><img src="${thumbPhoto(p, colour, n)}" alt="" loading="lazy"></button>`).join("") : "";
       // preload the other colours' first photo so switching feels instant
       colours.filter(c => c !== colour).forEach(c => { new Image().src = photo(p, c, 1); });
     }
@@ -168,9 +168,9 @@
     document.getElementById("related").innerHTML = related.map(productCard).join("");
   }
 </script>
-<script src="js/firebase-config.js?v=202610021937"></script>
+<script src="js/firebase-config.js?v=202610041506"></script>
 <script type="module">
-  import { loadCatalogue } from "./js/auth.js?v=202610021937";
+  import { loadCatalogue } from "./js/auth.js?v=202610041506";
   // Designs not in the public list: look in the members' catalogue and the customer's private sets
   if (!PRODUCTS.some(x => x.code === code)) {
     document.addEventListener("venora-auth", async e => {

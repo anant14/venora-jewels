@@ -25,8 +25,19 @@
 
   const COLOURS = window.GOLD_COLOURS || { Y: "Yellow Gold", R: "Rose Gold", W: "White Gold" };
   const colourCodes = p => (p.views ? Object.keys(COLOURS) : []);
-  const photo = (p, c, n) => `images/products/${encodeURIComponent(p.code)}/${c}-${n}.webp`;
-  const cardPhoto = (p, c) => `images/products/${encodeURIComponent(p.code)}/${c}-card.webp`;
+  // Photos live in Cloudflare R2: <media>/<category-folder>/<code>/<code>_<gold>_view-<n>[_thumb].webp
+  const MEDIA = (V.media || "").replace(/\/$/, "");
+  const CAT_FOLDER = { Earrings: "earrings", Rings: "ladies-rings", Pendants: "pendants", Necklaces: "necklaces", Bracelets: "bracelets" };
+  const GOLD_FOLDER = { Y: "yellow-gold", R: "rose-gold", W: "white-gold" };
+  const folder = p => p.folder || CAT_FOLDER[p.category] || p.category.toLowerCase().replace(/[^a-z]+/g, "-");
+  const mediaUrl = (p, c, n, thumb) => {
+    const code = encodeURIComponent(p.code);
+    return `${MEDIA}/${folder(p)}/${code}/${code}_${GOLD_FOLDER[c]}_view-${n}${thumb ? "_thumb" : ""}.webp`;
+  };
+  const photo = (p, c, n) => mediaUrl(p, c, n, false);
+  const thumbPhoto = (p, c, n) => mediaUrl(p, c, n, true);
+  const cardPhoto = (p, c) => mediaUrl(p, c, 1, true);
+  const zoomClass = p => ["pendants", "necklaces"].includes(folder(p)) ? " zoom-" + folder(p) : "";
   const productUrl = (p, c) => "product.html?code=" + encodeURIComponent(p.code) + (c ? "&colour=" + c : "");
   const priceText = p => p.price || "Price on request";
   const enquiryText = (p, choices) => {
@@ -54,7 +65,7 @@
       : artSvg(p.category);
     return `
       <article class="card" data-code="${esc(p.code)}">
-        <a href="${productUrl(p, c)}" class="card-img">${media}</a>
+        <a href="${productUrl(p, c)}" class="card-img${zoomClass(p)}">${media}</a>
         <div class="card-body">
           <span class="card-cat">${esc(p.category)}</span>
           <h3><a href="${productUrl(p, c)}">${esc(p.name)}</a></h3>
@@ -160,6 +171,6 @@
     });
   }
 
-  window.Venora = { esc, waLink, ICON, artSvg, productCard, productUrl, priceText, enquiryText, COLOURS, colourCodes, photo, swatches };
+  window.Venora = { esc, waLink, ICON, artSvg, productCard, productUrl, priceText, enquiryText, COLOURS, colourCodes, photo, thumbPhoto, cardPhoto, zoomClass, swatches };
   renderChrome();
 })();

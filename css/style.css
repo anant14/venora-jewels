@@ -505,3 +505,10 @@ button.dot:hover { transform: scale(1.12); }
 .legal ul { padding-left: 22px; }
 .legal a { color: var(--wine); text-decoration: underline; }
 .legal b { color: var(--ink); font-weight: 500; }
+
+/* Pendants & necklaces are photographed full-length: zoom the card in on the jewel */
+.card-img.zoom-pendants img, .tile.zoom-pendants img { transform: scale(2.3); transform-origin: 50% 80%; }
+.card:hover .card-img.zoom-pendants img { transform: scale(2.4); }
+.card-img.zoom-necklaces img, .tile.zoom-necklaces img { transform: scale(1.7); transform-origin: 50% 88%; }
+.card:hover .card-img.zoom-necklaces img { transform: scale(1.78); }
+.card-img img { object-fit: contain; }

@@ -4,7 +4,7 @@
    Add, remove or edit products here. Each product gets its
    own page automatically (product.html?code=YOUR-CODE).
 
-   code         design code (also the folder name in images/products/)
+   code         design code (also its folder name on Cloudflare R2)
    name         product name
    category     Earrings | Rings | Pendants | Necklaces | Bracelets (a new name creates a new filter)
    featured     true = shown on the Home page
@@ -16,10 +16,10 @@
    options      extra choices for the customer (gold colour is added automatically)
    details      specification table on the product page
 
-   PHOTOS live in images/products/<code>/ and are named by colour:
-     Y-1.webp … Y-4.webp   yellow gold views  (Y-card.webp = small card image)
-     R-1.webp … R-4.webp   rose gold views    (R-card.webp)
-     W-1.webp … W-4.webp   white gold views   (W-card.webp)
+   PHOTOS are loaded from Cloudflare R2 (see "media" in js/config.js):
+     <category folder>/<code>/<code>_yellow-gold_view-1.webp … (+ _thumb.webp)
+     rose-gold / white-gold the same. Category folders: earrings, ladies-rings,
+     pendants, necklaces, bracelets. "views" = how many photos per colour.
    ========================================================= */
 window.GOLD_COLOURS = { Y: "Yellow Gold", R: "Rose Gold", W: "White Gold" };
 
@@ -63,7 +63,7 @@ window.PRODUCTS = [
   /* ---------------- RINGS ---------------- */
   {
     code: "DDLR-710", name: "Round Solitaire Ring", category: "Rings", featured: true, price: "",
-    colour: "W", views: 4,
+    colour: "W", views: 5,
     short: "A single round brilliant on a smooth, polished band.",
     description: "Our purest expression of brilliance — a round lab grown diamond raised in a four-prong setting on a smooth polished band. A ring for the moment that matters.",
     options: GOLD_PURITY,
@@ -87,7 +87,7 @@ window.PRODUCTS = [
   },
   {
     code: "DDLR-1063", name: "Oval & Baguette Three-Stone Ring", category: "Rings", featured: false, price: "",
-    colour: "W", views: 4,
+    colour: "W", views: 5,
     short: "An oval centre flanked by stepped baguettes.",
     description: "A striking oval lab grown diamond flanked by stepped baguette diamonds on a bold band — an art-deco inspired ring with presence.",
     options: GOLD_PURITY,
@@ -97,7 +97,7 @@ window.PRODUCTS = [
   /* ---------------- PENDANTS ---------------- */
   {
     code: "GNK-0004", name: "Pavé Heart Pendant", category: "Pendants", featured: false, price: "",
-    colour: "R", views: 3,
+    colour: "R", views: 4,
     short: "An open heart framed in lab grown diamonds.",
     description: "An open heart outlined with a double row of lab grown diamonds on a fine chain — a timeless gift of love.",
     options: GOLD_PURITY,
@@ -105,7 +105,7 @@ window.PRODUCTS = [
   },
   {
     code: "GPD-0010", name: "Butterfly Pendant", category: "Pendants", featured: true, price: "",
-    colour: "Y", views: 3,
+    colour: "Y", views: 4,
     short: "A delicate diamond butterfly on a fine chain.",
     description: "Delicate wings set with lab grown diamonds, resting on a fine chain. Light, playful and made for everyday wear.",
     options: GOLD_PURITY,
@@ -113,7 +113,7 @@ window.PRODUCTS = [
   },
   {
     code: "GPD-0016", name: "Infinity Pendant", category: "Pendants", featured: false, price: "",
-    colour: "W", views: 3,
+    colour: "W", views: 4,
     short: "An infinity symbol set with pavé and pear diamonds.",
     description: "An infinity symbol traced in pavé diamonds, with two pear-shaped lab grown diamonds at its heart — a symbol of forever.",
     options: GOLD_PURITY,
@@ -121,7 +121,7 @@ window.PRODUCTS = [
   },
   {
     code: "GPD-0077", name: "Emerald-Cut Bezel Pendant", category: "Pendants", featured: false, price: "",
-    colour: "R", views: 3,
+    colour: "R", views: 4,
     short: "A single emerald-cut diamond in a clean bezel.",
     description: "A single emerald-cut lab grown diamond, framed in a clean gold bezel. Minimal, modern and endlessly wearable.",
     options: GOLD_PURITY,
@@ -131,7 +131,7 @@ window.PRODUCTS = [
   /* ---------------- NECKLACES ---------------- */
   {
     code: "GNK-0021-L04", name: "Diamond Lariat Necklace", category: "Necklaces", featured: false, price: "",
-    colour: "W", views: 3,
+    colour: "W", views: 4,
     short: "Mixed-shape diamonds ending in a graceful drop.",
     description: "Emerald-cut, oval and pear-shaped lab grown diamonds linked in a continuous line, finishing in an elegant drop at the centre. A statement for weddings and celebrations.",
     options: GOLD_PURITY,
@@ -139,7 +139,7 @@ window.PRODUCTS = [
   },
   {
     code: "GNK-0029", name: "Fancy-Shape Station Necklace", category: "Necklaces", featured: false, price: "",
-    colour: "Y", views: 3,
+    colour: "Y", views: 4,
     short: "A necklace of alternating fancy-shape diamonds.",
     description: "Emerald-cut, square and oval lab grown diamonds alternate around the neck, linked by fine gold detailing — a modern take on the classic diamond necklace.",
     options: GOLD_PURITY,
@@ -147,7 +147,7 @@ window.PRODUCTS = [
   },
   {
     code: "GNK-0008", name: "Floral Cluster Necklace", category: "Necklaces", featured: false, price: "",
-    colour: "R", views: 3,
+    colour: "R", views: 4,
     short: "Diamond flowers linked all the way around.",
     description: "A continuous chain of diamond flower clusters — each bloom formed from marquise and round lab grown diamonds. Feminine, festive and full of sparkle.",
     options: GOLD_PURITY,
@@ -155,7 +155,7 @@ window.PRODUCTS = [
   },
   {
     code: "GNK-0043-L04", name: "Classic Tennis Necklace", category: "Necklaces", featured: false, price: "",
-    colour: "W", views: 3,
+    colour: "W", views: 4,
     short: "An unbroken line of brilliance.",
     description: "Round lab grown diamonds set one after another in an unbroken line of light. The iconic tennis necklace, made accessible.",
     options: GOLD_PURITY,
