@@ -6,6 +6,8 @@ rules_version = '2';
 //  settings/catalogue  master switch {enabled, until} for the members' catalogue
 //  catalogue/{code}  members' catalogue designs (visible while the switch is on)
 //  sets/{setId}      hand-picked design sets an admin can give to particular customers
+//  public/goldRates  today's gold rate per gram (everyone can read; admins write)
+//  offers/{id}       promotional offers (text and/or image, on/off, optional dates)
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -67,6 +69,16 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/access/$(request.auth.uid))
         && setId in get(/databases/$(database)/documents/access/$(request.auth.uid)).data.sets
         && active(get(/databases/$(database)/documents/access/$(request.auth.uid)).data));
+      allow write: if isAdmin();
+    }
+
+    // shown to every visitor: today's gold rate (public/goldRates) and offers
+    match /public/{name} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /offers/{offerId} {
+      allow read: if true;
       allow write: if isAdmin();
     }
 

@@ -1,6 +1,8 @@
-/* Venora Jewels — private CAD sheet service (Cloudflare Worker).
-   GET /cad/<path>  -> the CAD sheet from the private "venora-cad" bucket,
-                       only for a signed-in admin (Firebase ID token in the Authorization header). */
+/* Venora Jewels — admin service (Cloudflare Worker). Every route needs a signed-in admin
+   (Firebase ID token in the Authorization header).
+   GET  /cad/<path>  -> CAD sheet from the private "venora-cad" bucket
+   POST /upload      -> stores an offer image (JPG/PNG/WebP, max 5 MB) in the public
+                        "venora-media" bucket under offers/ and returns its public URL */
 
 const JWKS_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
 let jwks = { keys: [], expires: 0 };
@@ -37,7 +39,7 @@ function corsHeaders(request, env) {
   const origin = request.headers.get("Origin") || "";
   const allowed = env.ORIGINS.split(",").map(s => s.trim());
   return allowed.includes(origin)
-    ? { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Headers": "Authorization, Content-Type", "Access-Control-Allow-Methods": "GET, OPTIONS", "Vary": "Origin" }
+    ? { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Headers": "Authorization, Content-Type", "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Vary": "Origin" }
     : {};
 }
 
@@ -47,16 +49,34 @@ export default {
     const cors = corsHeaders(request, env);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: { ...cors, "Access-Control-Max-Age": "86400" } });
 
-    if (request.method === "GET" && url.pathname.startsWith("/cad/")) {
-      const auth = request.headers.get("Authorization") || "";
-      if (!auth.startsWith("Bearer ")) return new Response("Login required", { status: 401, headers: cors });
-      let claims;
-      try { claims = await verifyIdToken(auth.slice(7), env.PROJECT_ID); }
-      catch (e) { return new Response("Invalid login", { status: 401, headers: cors }); }
-      const admins = env.ADMINS.split(",").map(s => s.trim().toLowerCase());
-      if (!claims.email_verified || !admins.includes((claims.email || "").toLowerCase())) {
-        return new Response("Admins only", { status: 403, headers: cors });
-      }
+    const isCad = request.method === "GET" && url.pathname.startsWith("/cad/");
+    const isUpload = request.method === "POST" && url.pathname === "/upload";
+    if (!isCad && !isUpload) return new Response("Not found", { status: 404, headers: cors });
+
+    // admins only
+    const auth = request.headers.get("Authorization") || "";
+    if (!auth.startsWith("Bearer ")) return new Response("Login required", { status: 401, headers: cors });
+    let claims;
+    try { claims = await verifyIdToken(auth.slice(7), env.PROJECT_ID); }
+    catch (e) { return new Response("Invalid login", { status: 401, headers: cors }); }
+    const admins = env.ADMINS.split(",").map(s => s.trim().toLowerCase());
+    if (!claims.email_verified || !admins.includes((claims.email || "").toLowerCase())) {
+      return new Response("Admins only", { status: 403, headers: cors });
+    }
+
+    if (isUpload) {
+      const TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+      const type = (request.headers.get("Content-Type") || "").split(";")[0].trim();
+      if (!TYPES[type]) return Response.json({ error: "Please upload a JPG, PNG or WebP image." }, { status: 415, headers: cors });
+      const body = await request.arrayBuffer();
+      if (body.byteLength > 5 * 1024 * 1024) return Response.json({ error: "Image is larger than 5 MB." }, { status: 413, headers: cors });
+      const day = new Date().toISOString().slice(0, 10);
+      const key = `offers/${day}-${crypto.randomUUID().slice(0, 8)}.${TYPES[type]}`;
+      await env.MEDIA.put(key, body, { httpMetadata: { contentType: type, cacheControl: "public, max-age=31536000" } });
+      return Response.json({ url: `${env.MEDIA_URL}/${key}` }, { headers: cors });
+    }
+
+    {
       const key = decodeURIComponent(url.pathname.slice(5));
       if (!/_cad-(sheet|render).webp$/.test(key)) return new Response("Not found", { status: 404, headers: cors });
       const obj = await env.CAD.get(key);
@@ -65,7 +85,5 @@ export default {
         headers: { ...cors, "Content-Type": "image/webp", "Cache-Control": "private, max-age=3600" }
       });
     }
-
-    return new Response("Not found", { status: 404, headers: cors });
   }
 };

@@ -708,3 +708,46 @@ body.leaving main { opacity: 0; transition: opacity .25s ease; }
   .reveal { opacity: 1; transform: none; }
   @view-transition { navigation: none; }
 }
+
+/* ---------- Gold rate bar + offers ---------- */
+.rate-bar { background: #1a040c; border-bottom: 1px solid rgba(201, 163, 104, .3); color: var(--muted); font-size: .8rem; letter-spacing: .03em; }
+.rate-inner { display: flex; align-items: center; gap: 18px; min-height: 36px; }
+.rate-viewport { flex: 1; overflow: hidden; min-width: 0; }
+.rate-track { display: flex; align-items: center; gap: 22px; white-space: nowrap; width: max-content; }
+.rate-track.ticker { animation: ticker 28s linear infinite; }
+.rate-gap { width: 40px; }
+@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.rate-label { color: var(--gold); text-transform: uppercase; letter-spacing: .14em; font-size: .7rem; }
+.rate-label small { text-transform: none; letter-spacing: .02em; color: var(--muted); font-size: .72rem; margin-left: 4px; }
+.rate-item b { color: var(--gold-light); font-weight: 500; margin-left: 4px; }
+.rate-date { font-size: .72rem; opacity: .8; }
+.rate-offer { flex-shrink: 0; color: #2a0614; background: var(--gold); padding: 4px 12px; border-radius: 20px; font-weight: 500; font-size: .76rem; white-space: nowrap; max-width: 46vw; overflow: hidden; text-overflow: ellipsis; }
+.rate-offer:hover { background: var(--gold-light); color: #2a0614; }
+.rate-offer .spark { display: inline-block; animation: twinkle 2.4s ease-in-out infinite; }
+@keyframes twinkle { 0%, 100% { opacity: .6; transform: scale(.9); } 50% { opacity: 1; transform: scale(1.15); } }
+
+.offers-section { padding: 64px 0; background: radial-gradient(ellipse at top, #5e1b3e 0%, var(--bg) 75%); border-bottom: 1px solid var(--line); }
+.offer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+.offer-card { background: var(--surface); border: 1px solid rgba(201, 163, 104, .45); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 16px 40px rgba(0, 0, 0, .25); }
+.offer-img img { width: 100%; display: block; max-height: 420px; object-fit: cover; }
+.offer-body { padding: 26px 28px 30px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.offer-body h3 { font-size: 1.8rem; }
+.offer-body p { color: var(--muted); }
+.offer-card.text-only { background: linear-gradient(135deg, #5a1a3a, #3a0b22); }
+.offer-card.text-only .offer-body { padding: 40px; }
+.offer-card.text-only h3 { font-size: 2.3rem; }
+
+/* admin: gold rate & offers */
+.rate-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0 12px; margin-top: 14px; }
+.offer-editor { border-top: 1px solid var(--line); margin-top: 20px; padding-top: 20px; }
+.offer-editor h3 { font-size: 1.5rem; margin-bottom: 12px; }
+.offer-preview img { max-width: 100%; max-height: 260px; border: 1px solid var(--line); margin-bottom: 16px; }
+.offer-row { align-items: center; }
+.offer-row img, .offer-thumb { width: 64px; height: 64px; object-fit: cover; flex-shrink: 0; }
+.offer-thumb { display: flex; align-items: center; justify-content: center; background: var(--cream); font-family: var(--serif); font-size: 1.4rem; color: var(--gold-light); }
+.offer-row-text { flex: 1; min-width: 200px; }
+@media (max-width: 860px) {
+  .rate-grid { grid-template-columns: repeat(3, 1fr); }
+  .rate-inner { gap: 10px; }
+  .rate-label small { display: none; }
+}

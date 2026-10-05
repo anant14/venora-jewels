@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610051407">
+<link rel="stylesheet" href="css/style.css?v=202610051430">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
 <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
@@ -33,6 +33,7 @@
 
     <div class="admin-tabs" role="tablist">
       <button class="active" data-tab="customers">Customers</button>
+      <button data-tab="rates">Gold rate &amp; offers</button>
       <button data-tab="switch">Catalogue switch</button>
       <button data-tab="sets">Catalogue sets</button>
       <button data-tab="designs">Website designs</button>
@@ -49,6 +50,61 @@
         </div>
       </div>
       <div class="table-wrap"><table class="admin-table" id="custTable"></table></div>
+    </section>
+
+    <!-- GOLD RATE + OFFERS (shown to every visitor) -->
+    <section class="admin-tab" id="tab-rates" hidden>
+      <div class="admin-card">
+        <h2>Today's gold rate</h2>
+        <p class="muted">Price per gram in ₹. It appears in the bar at the top of every page. Update it every morning.</p>
+        <p class="status" id="rateUpdated"></p>
+        <div class="rate-grid">
+          <div class="field"><label for="r24">24KT</label><input id="r24" type="number" min="0" step="1" inputmode="numeric" placeholder="e.g. 7450"></div>
+          <div class="field"><label for="r22">22KT</label><input id="r22" type="number" min="0" step="1" inputmode="numeric"></div>
+          <div class="field"><label for="r18">18KT</label><input id="r18" type="number" min="0" step="1" inputmode="numeric"></div>
+          <div class="field"><label for="r14">14KT</label><input id="r14" type="number" min="0" step="1" inputmode="numeric"></div>
+          <div class="field"><label for="r9">9KT</label><input id="r9" type="number" min="0" step="1" inputmode="numeric"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="rateShow" checked> Show the gold rate on the website</label>
+        <div class="btn-row">
+          <button class="btn btn-ghost btn-sm" id="rateFill" type="button">Fill others from 24KT</button>
+          <button class="btn btn-dark" id="rateSave" type="button">Save today's rate</button>
+        </div>
+        <p class="form-note left" id="rateMsg"></p>
+      </div>
+
+      <div class="admin-card mt">
+        <div class="toolbar">
+          <div><h2>Offers</h2><p class="muted">Text and/or an image. An offer shows on the Home page and in the top bar only while it is switched on and within its dates.</p></div>
+          <button class="btn btn-dark btn-sm" id="newOfferBtn" type="button">+ New offer</button>
+        </div>
+        <div id="offerList" class="set-list"></div>
+
+        <div id="offerEditor" class="offer-editor" hidden>
+          <h3 id="offerEditorTitle">New offer</h3>
+          <div class="field"><label for="oTitle">Headline *</label><input id="oTitle" maxlength="90" placeholder="e.g. Diwali Sparkle — 20% off making charges"></div>
+          <div class="field"><label for="oText">Details (optional)</label><textarea id="oText" maxlength="400" placeholder="e.g. On all diamond earrings till 31 October."></textarea></div>
+          <div class="row">
+            <div class="field"><label for="oFile">Image (optional)</label><input id="oFile" type="file" accept="image/jpeg,image/png,image/webp"></div>
+            <div class="field"><label for="oImage">…or image link</label><input id="oImage" type="url" placeholder="https://"></div>
+          </div>
+          <div class="offer-preview" id="oPreview" hidden></div>
+          <div class="row">
+            <div class="field"><label for="oCta">Button text (optional)</label><input id="oCta" maxlength="30" placeholder="e.g. Shop earrings"></div>
+            <div class="field"><label for="oLink">Button link (optional)</label><input id="oLink" placeholder="collections.html?cat=Earrings or WhatsApp"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="oStart">Starts (optional)</label><input id="oStart" type="datetime-local"></div>
+            <div class="field"><label for="oEnd">Ends (optional)</label><input id="oEnd" type="datetime-local"></div>
+          </div>
+          <label class="check"><input type="checkbox" id="oActive" checked> Offer is switched on</label>
+          <p class="form-error" id="oErr" hidden></p>
+          <div class="btn-row">
+            <button class="btn btn-dark" id="oSave" type="button">Save offer</button>
+            <button class="btn btn-ghost" id="oCancel" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- MASTER SWITCH -->
@@ -157,14 +213,14 @@
 
 <footer id="site-footer"></footer>
 
-<script src="js/config.js?v=202610051337"></script>
-<script src="js/products.js?v=202610051337"></script>
-<script src="js/main.js?v=202610051337"></script>
-<script src="js/firebase-config.js?v=202610051337"></script>
-<script src="js/library.js?v=202610051337"></script>
+<script src="js/config.js?v=202610051430"></script>
+<script src="js/products.js?v=202610051430"></script>
+<script src="js/main.js?v=202610051430"></script>
+<script src="js/firebase-config.js?v=202610051430"></script>
+<script src="js/library.js?v=202610051430"></script>
 <script type="module">
   import { ADMINS, login, logout, ready, isActive, loadCatalogue, db, doc, getDoc, setDoc, deleteDoc,
-           collection, getDocs, serverTimestamp, Timestamp } from "./js/auth.js?v=202610051337";
+           collection, getDocs, serverTimestamp, Timestamp } from "./js/auth.js?v=202610051430";
   const { esc, productCard, COLOURS } = Venora;
   const $ = id => document.getElementById(id);
 
@@ -206,7 +262,7 @@
     $("who").innerHTML = `Signed in as ${esc(state.user.email)} · <a href="#" id="outLink">Log out</a>`;
     $("outLink").onclick = e => { e.preventDefault(); logout(); };
     designs = mergeDesigns(await loadCatalogue());
-    await Promise.all([loadCustomers(), loadSwitch(), loadSets()]);
+    await Promise.all([loadCustomers(), loadSwitch(), loadSets(), loadRates(), loadOffers()]);
     renderDesigns("All");
     // the full R2 library (3,800+ designs) loads in the background
     loadLibrary().then(items => {
@@ -523,6 +579,127 @@
     }).catch(e => { const el = $("cadLoading"); if (el) el.textContent = e.message; });
   }
   $("cadClose").onclick = () => $("cadDlg").close();
+
+
+  /* ---------- gold rate ---------- */
+  const PURITY = { 22: 0.916, 18: 0.75, 14: 0.585, 9: 0.375 };
+  const KTS = [24, 22, 18, 14, 9];
+  async function loadRates() {
+    const snap = await getDoc(doc(db, "public", "goldRates"));
+    const d = snap.exists() ? snap.data() : {};
+    KTS.forEach(k => { $("r" + k).value = d.rates && d.rates["k" + k] != null ? d.rates["k" + k] : ""; });
+    $("rateShow").checked = d.show !== false;
+    $("rateUpdated").innerHTML = d.updatedAt
+      ? `Last updated ${fmt(d.updatedAt, true)} by ${esc(d.updatedBy || "admin")}` + (toDate(d.updatedAt).toDateString() !== new Date().toDateString() ? ` <span class="pill off">Not updated today</span>` : ` <span class="pill on">Up to date</span>`)
+      : `<span class="pill off">No rate saved yet</span>`;
+  }
+  $("rateFill").onclick = () => {
+    const base = +$("r24").value;
+    if (!base) { $("rateMsg").textContent = "Enter the 24KT rate first."; return; }
+    Object.entries(PURITY).forEach(([k, f]) => { $("r" + k).value = Math.round(base * f); });
+    $("rateMsg").textContent = "Filled from 24KT by purity (22KT 91.6%, 18KT 75%, 14KT 58.5%, 9KT 37.5%). Adjust if needed, then save.";
+  };
+  $("rateSave").onclick = async () => {
+    const rates = {};
+    KTS.forEach(k => { const v = $("r" + k).value; rates["k" + k] = v === "" ? null : Math.round(+v); });
+    if (!Object.values(rates).some(v => v)) { $("rateMsg").textContent = "Enter at least one rate."; return; }
+    $("rateSave").disabled = true;
+    try {
+      await setDoc(doc(db, "public", "goldRates"), { rates, show: $("rateShow").checked, updatedAt: serverTimestamp(), updatedBy: (await ready()).user.email });
+      $("rateMsg").textContent = "Saved — the website shows the new rate now.";
+      loadRates();
+    } catch (e) { $("rateMsg").textContent = "Could not save: " + e.message; }
+    $("rateSave").disabled = false;
+  };
+
+  /* ---------- offers ---------- */
+  let offers = [], editingOffer = null, offerImage = "";
+  function offerState(o) {
+    const now = new Date(), start = toDate(o.start), end = toDate(o.end);
+    if (!o.active) return ["Off", ""];
+    if (end && end < now) return ["Ended", "off"];
+    if (start && start > now) return ["Scheduled", ""];
+    return ["Live now", "on"];
+  }
+  async function loadOffers() {
+    const snap = await getDocs(collection(db, "offers"));
+    offers = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (toDate(b.updatedAt) || 0) - (toDate(a.updatedAt) || 0));
+    $("offerList").innerHTML = offers.length ? offers.map(o => {
+      const [label, cls] = offerState(o);
+      const when = [o.start ? "from " + fmt(o.start, true) : "", o.end ? "until " + fmt(o.end, true) : ""].filter(Boolean).join(" ");
+      return `<div class="set-row offer-row">
+        ${o.image ? `<img src="${esc(o.image)}" alt="">` : `<div class="offer-thumb">Aa</div>`}
+        <div class="offer-row-text"><b>${esc(o.title)}</b> <span class="pill ${cls}">${label}</span>
+          <br><span class="muted">${esc((o.text || "").slice(0, 90))}${when ? " · " + esc(when) : ""}</span></div>
+        <div class="btn-row">
+          <button class="btn btn-ghost btn-sm" data-toggle="${esc(o.id)}">${o.active ? "Switch off" : "Switch on"}</button>
+          <button class="btn btn-ghost btn-sm" data-edit="${esc(o.id)}">Edit</button>
+          <button class="btn btn-ghost btn-sm" data-del="${esc(o.id)}">Delete</button>
+        </div></div>`;
+    }).join("") : `<p class="muted">No offers yet.</p>`;
+  }
+  const localInput = t => { const d = toDate(t); if (!d) return ""; const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 16); };
+  function showPreview() {
+    const url = offerImage || $("oImage").value.trim();
+    $("oPreview").hidden = !url;
+    $("oPreview").innerHTML = url ? `<img src="${esc(url)}" alt="Offer image preview">` : "";
+  }
+  function openOffer(o) {
+    editingOffer = o; offerImage = "";
+    $("offerEditorTitle").textContent = o ? "Edit offer" : "New offer";
+    $("oTitle").value = o ? o.title : ""; $("oText").value = o ? o.text || "" : "";
+    $("oImage").value = o ? o.image || "" : ""; $("oFile").value = "";
+    $("oCta").value = o ? o.cta || "" : ""; $("oLink").value = o ? o.link || "" : "";
+    $("oStart").value = o ? localInput(o.start) : ""; $("oEnd").value = o ? localInput(o.end) : "";
+    $("oActive").checked = o ? o.active !== false : true;
+    $("oErr").hidden = true;
+    $("offerEditor").hidden = false; showPreview();
+    $("offerEditor").scrollIntoView({ behavior: "smooth" });
+  }
+  $("newOfferBtn").onclick = () => openOffer(null);
+  $("oCancel").onclick = () => { $("offerEditor").hidden = true; };
+  $("oImage").addEventListener("input", () => { offerImage = ""; showPreview(); });
+  $("oFile").addEventListener("change", async () => {
+    const f = $("oFile").files[0]; if (!f) return;
+    const err = $("oErr"); err.hidden = true;
+    if (f.size > 5 * 1024 * 1024) { err.hidden = false; err.textContent = "Image is larger than 5 MB."; return; }
+    $("oPreview").hidden = false; $("oPreview").innerHTML = `<p class="muted">Uploading…</p>`;
+    try {
+      const token = await window.VenoraAuth.idToken();
+      const res = await fetch("https://venora-cad.jewelsvenora.workers.dev/upload", { method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": f.type }, body: f });
+      const out = await res.json();
+      if (!res.ok) throw new Error(out.error || res.status);
+      offerImage = out.url; $("oImage").value = out.url; showPreview();
+    } catch (e) { err.hidden = false; err.textContent = "Upload failed: " + e.message; $("oPreview").hidden = true; }
+  });
+  $("oSave").onclick = async () => {
+    const err = $("oErr"); err.hidden = true;
+    const title = $("oTitle").value.trim(), text = $("oText").value.trim(), image = $("oImage").value.trim();
+    const start = $("oStart").value ? Timestamp.fromDate(new Date($("oStart").value)) : null;
+    const end = $("oEnd").value ? Timestamp.fromDate(new Date($("oEnd").value)) : null;
+    const problems = [];
+    if (!title) problems.push("Add a headline.");
+    if (start && end && end.toMillis() <= start.toMillis()) problems.push("The end must be after the start.");
+    if (image && !/^https:\/\//.test(image)) problems.push("The image link must start with https://");
+    if (problems.length) { err.hidden = false; err.textContent = problems.join(" "); return; }
+    const id = editingOffer ? editingOffer.id : "offer-" + Date.now().toString(36);
+    const data = { title, text, image, cta: $("oCta").value.trim(), link: $("oLink").value.trim(), active: $("oActive").checked,
+                   start, end, updatedAt: serverTimestamp(), createdAt: editingOffer ? editingOffer.createdAt || serverTimestamp() : serverTimestamp() };
+    $("oSave").disabled = true;
+    try { await setDoc(doc(db, "offers", id), data); $("offerEditor").hidden = true; await loadOffers(); }
+    catch (e) { err.hidden = false; err.textContent = "Could not save: " + e.message; }
+    $("oSave").disabled = false;
+  };
+  $("offerList").addEventListener("click", async e => {
+    const t = e.target.dataset;
+    if (t.edit) openOffer(offers.find(o => o.id === t.edit));
+    if (t.toggle) {
+      const o = offers.find(x => x.id === t.toggle);
+      await setDoc(doc(db, "offers", o.id), { active: !o.active, updatedAt: serverTimestamp() }, { merge: true }).catch(err => alert(err.message));
+      loadOffers();
+    }
+    if (t.del && confirm("Delete this offer?")) { await deleteDoc(doc(db, "offers", t.del)); loadOffers(); }
+  });
 
   document.addEventListener("venora-auth", e => start(e.detail));
 </script>

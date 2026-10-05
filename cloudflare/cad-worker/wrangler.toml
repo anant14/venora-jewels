@@ -7,7 +7,13 @@ compatibility_date = "2024-09-23"
 binding = "CAD"
 bucket_name = "venora-cad"
 
+# Public media bucket (offer images are uploaded here by admins)
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "venora-media"
+
 [vars]
+MEDIA_URL = "https://pub-6c4678341d734a4aa0ce46f8467939d7.r2.dev"
 PROJECT_ID = "venora-jewels"
 ADMINS = "jewelsvenora@gmail.com,anantbansal2696@gmail.com"
 ORIGINS = "https://www.venorajewels.com,https://venorajewels.com,http://localhost:8000"
