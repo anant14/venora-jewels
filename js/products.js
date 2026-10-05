@@ -30,7 +30,7 @@ window.PRODUCTS = [
   /* ---------------- EARRINGS ---------------- */
   {
     code: "ER-0001", name: "Classic Solitaire Studs", category: "Earrings", featured: true, price: "",
-    colour: "Y", views: 3, model3d: true,
+    colour: "Y", views: 3, /* model3d: true, — 3D view switched off for now; uncomment to show it again */
     short: "Round brilliant solitaires in a four-prong setting.",
     description: "The earrings every jewellery box should begin with — a matched pair of round brilliant lab grown diamonds, held high in four-prong settings with secure screw backs.",
     options: GOLD_PURITY,

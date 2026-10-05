@@ -578,3 +578,133 @@ button.dot:hover { transform: scale(1.12); }
 .thumbs .thumb-3d span { font-size: 1.3rem; line-height: 1; }
 .thumbs .thumb-3d small { font-family: var(--sans); font-size: .62rem; letter-spacing: .2em; margin-top: 2px; }
 .thumbs .thumb-3d.active { box-shadow: inset 0 0 0 2px var(--gold); }
+
+/* =====================================================================
+   BRAND THEME — wine background across the site (from the Venora logo)
+   Overrides the light theme above; jewellery photos are transparent,
+   so gold and diamonds sit on a soft wine "spotlight".
+   ===================================================================== */
+:root {
+  color-scheme: dark;
+  --bg: #3a0b22;
+  --surface: #4a1430;
+  --cream: #571c3b;
+  --ink: #f6ecdf;
+  --muted: #d3bcc6;
+  --line: rgba(246, 236, 223, .14);
+  --gold: #c9a368;
+  --gold-dark: #e2c48f;
+  --gold-light: #ecd5a8;
+  --wine: #6b1840;
+  --wine-deep: #220510;
+  --spotlight: radial-gradient(circle at 50% 42%, #6d2649 0%, #4c1331 48%, #2e0819 100%);
+}
+body { background: var(--bg); }
+a:hover { color: var(--gold-light); }
+
+/* header & logo */
+#site-header { background: rgba(34, 5, 16, .82); border-bottom-color: rgba(201, 163, 104, .25); }
+.logo, .nav-account, .nav-insta { color: var(--ink); }
+.logo small { color: var(--gold); }
+.nav-account:hover, .nav-insta:hover { color: var(--gold-light); }
+
+/* buttons: gold on wine */
+.btn-dark { background: var(--gold); color: #2a0614; }
+.btn-dark:hover { background: var(--gold-light); color: #2a0614; }
+.btn-gold { color: #2a0614; }
+.btn-gold:hover { background: var(--gold-light); color: #2a0614; }
+.btn-ghost:hover, .btn-light:hover { background: var(--ink); color: var(--wine-deep); }
+.btn-google { color: #1c1b1a; }
+.btn:active { transform: scale(.97); }
+
+/* selected states use gold instead of wine */
+.filters button.active, .filters button:hover,
+.chips button.active, .tabs button.active, .mode-tabs button.active, .scale span.on {
+  background: var(--gold); border-color: var(--gold); color: #2a0614;
+}
+.colour-chips button.active, .view-chips button.active, .pick.on { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+button.dot.active { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--gold); }
+.admin-tabs button.active { color: var(--gold-light); border-color: var(--gold); }
+.check input, .slider input, .pick input { accent-color: var(--gold); }
+
+/* jewellery on a wine spotlight */
+.card-img, .gallery-main, .thumbs button, .pick img, .lib-img, .view-chips button, .cad-views img, .frame { background: var(--spotlight); }
+.tile:not(.photo) { background: var(--spotlight); }
+.page-hero { background: radial-gradient(ellipse at top, #5e1b3e 0%, var(--bg) 70%); }
+.dark { background: var(--wine-deep); }
+.stage-box { background: #1a040c; }
+
+/* text accents that were wine on cream */
+.gold-card .kt, .purity b, .price-callout strong, .admin-stats b { color: var(--gold-light); }
+.legal a, .check a, .admin-head a, .cad-dlg-head a, .tryon-panel .form-note a, .faq a { color: var(--gold-light) !important; }
+.status.on { color: #8fe0ad; }
+.status.off { color: #ffaaa0; }
+.admin-table tbody tr:hover { background: rgba(255, 255, 255, .04); }
+.card-colours b, .member-banner b { color: var(--ink); }
+.v3d-note { background: rgba(34, 5, 16, .7); color: var(--muted); }
+
+/* cards glow softly in gold on hover */
+.card { transition: box-shadow .35s, transform .35s, border-color .35s; }
+.card:hover { border-color: rgba(201, 163, 104, .55); box-shadow: 0 18px 40px rgba(0, 0, 0, .35), 0 0 0 1px rgba(201, 163, 104, .25); }
+
+/* =====================================================================
+   ANIMATIONS
+   ===================================================================== */
+/* smooth cross-fade between pages; the clicked product photo glides into the product page (supported browsers) */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .35s; }
+::view-transition-group(product-photo) { animation-duration: .45s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+
+/* scroll reveal: elements rise and fade in as they enter the screen */
+.reveal { opacity: 0; transform: translateY(32px); transition: opacity .8s ease, transform .8s cubic-bezier(.2, .7, .2, 1); transition-delay: var(--d, 0s); }
+.reveal.reveal-left { transform: translateX(-40px); }
+.reveal.reveal-right { transform: translateX(40px); }
+.reveal.reveal-zoom { transform: scale(.94); }
+.reveal.in { opacity: 1; transform: none; }
+
+/* hero entrance */
+@keyframes rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+@keyframes glow-in { from { opacity: 0; transform: translateY(-50%) scale(1.08); } to { opacity: 1; transform: translateY(-50%) scale(1); } }
+@keyframes float { 0%, 100% { transform: translateY(-50%) translateY(0); } 50% { transform: translateY(-50%) translateY(-12px); } }
+.hero-content > * { animation: rise .9s cubic-bezier(.2, .7, .2, 1) both; }
+.hero-content > :nth-child(1) { animation-delay: .1s; }
+.hero-content > :nth-child(2) { animation-delay: .25s; }
+.hero-content > :nth-child(3) { animation-delay: .45s; }
+.hero-content > :nth-child(4) { animation-delay: .6s; }
+.hero-logo { animation: glow-in 1.4s ease both, float 7s ease-in-out 1.4s infinite; }
+@media (max-width: 860px) { .hero-logo { animation: none; } }
+
+/* gold shimmer sweeping across italic headline words */
+@keyframes shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+.hero h1 em {
+  background: linear-gradient(100deg, var(--gold-light) 0%, var(--gold-light) 40%, #fff6e2 50%, var(--gold-light) 60%, var(--gold-light) 100%);
+  background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: shimmer 5s linear 1.5s infinite;
+}
+
+/* product cards: photo zooms gently, tap gives a soft press */
+.card-img img { transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
+.card:hover .card-img img { transform: scale(1.07); }
+.card:hover .card-img.zoom-pendants img { transform: scale(2.45); }
+.card:hover .card-img.zoom-necklaces img { transform: scale(1.8); }
+.card.pressed { transform: scale(.97); }
+.tile { transition: transform .35s ease, box-shadow .35s ease; }
+.tile:hover { transform: translateY(-4px); }
+
+/* product page: photos cross-fade when switching angle or gold colour */
+@keyframes photo-in { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
+.gallery-main img { animation: photo-in .45s ease both; }
+.gallery-main img.vt { view-transition-name: product-photo; }
+.thumbs button { transition: transform .2s, border-color .2s; }
+.thumbs button:hover { transform: translateY(-2px); }
+
+/* page fade-in (fallback where view transitions are not supported) */
+@keyframes page-in { from { opacity: 0; } to { opacity: 1; } }
+main { animation: page-in .5s ease both; }
+body.leaving main { opacity: 0; transition: opacity .25s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .reveal { opacity: 1; transform: none; }
+  @view-transition { navigation: none; }
+}

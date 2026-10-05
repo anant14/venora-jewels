@@ -176,6 +176,77 @@
     });
   }
 
+
+  /* ---------- Motion: reveal on scroll, product click transitions ---------- */
+  const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const REVEAL = [
+    ".section-head", ".split > *", ".feature", ".card", ".tile", ".step", ".cert", ".quote", ".c-card", ".gold-card",
+    ".process-card", ".value", ".founder", ".method", ".stats > div", ".price-callout", "figure.guide", ".faq details",
+    ".table-wrap", ".form", ".auth-card", ".account-card", ".set-block > h3", ".promise-list li", ".cta-band .wrap > *",
+    ".legal > *", ".member-banner", ".toolbar", ".product-info > *", ".purity", ".swatches"
+  ].join(",");
+
+  function setupReveal() {
+    if (REDUCE || !("IntersectionObserver" in window) || document.body.dataset.page === "admin") return;
+    const io = new IntersectionObserver(entries => entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+    }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    const tag = root => {
+      if (!root || !root.querySelectorAll) return;
+      root.querySelectorAll(REVEAL).forEach(el => {
+        if (el.classList.contains("reveal") || el.closest("#site-header, #site-footer, .hero, dialog")) return;
+        // neighbours appear one after another
+        const siblings = [...el.parentElement.children].filter(c => c.matches(REVEAL));
+        el.style.setProperty("--d", Math.min(siblings.indexOf(el), 8) * 0.07 + "s");
+        if (el.matches(".split > :first-child")) el.classList.add("reveal-left");
+        else if (el.matches(".split > :last-child")) el.classList.add("reveal-right");
+        else if (el.matches(".tile, .card, .cert, .value")) el.classList.add("reveal-zoom");
+        el.classList.add("reveal");
+        io.observe(el);
+      });
+    };
+    tag(document);
+    // safety net for fast scrolls / jumps: anything already above the bottom of the screen is shown
+    let queued = false;
+    const sweep = () => {
+      queued = false;
+      document.querySelectorAll(".reveal:not(.in)").forEach(el => {
+        if (el.getBoundingClientRect().top < window.innerHeight) { el.classList.add("in"); io.unobserve(el); }
+      });
+    };
+    window.addEventListener("scroll", () => { if (!queued) { queued = true; requestAnimationFrame(sweep); } }, { passive: true });
+    window.addEventListener("load", sweep);
+    // product grids are rendered later (filters, login, sets): animate new cards too
+    new MutationObserver(list => list.forEach(m => m.addedNodes.forEach(n => {
+      if (n.nodeType === 1) tag(n.parentElement || n);
+    }))).observe(document.querySelector("main") || document.body, { childList: true, subtree: true });
+  }
+
+  // Clicking a product: the card presses in and its photo glides into the product page
+  const CROSS_DOC_TRANSITIONS = "CSSViewTransitionRule" in window;
+  document.addEventListener("click", e => {
+    const a = e.target.closest('a[href^="product.html"]');
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || a.target === "_blank") return;
+    const card = a.closest(".card");
+    if (card) {
+      card.classList.add("pressed");
+      const img = card.querySelector(".card-img img");
+      if (img) img.style.viewTransitionName = "product-photo";
+    }
+    if (!CROSS_DOC_TRANSITIONS && !REDUCE) {
+      e.preventDefault();
+      document.body.classList.add("leaving");
+      setTimeout(() => { location.href = a.href; }, 220);
+    }
+  });
+  // coming back with the browser's Back button: undo the click effects
+  window.addEventListener("pageshow", () => {
+    document.body.classList.remove("leaving");
+    document.querySelectorAll(".card.pressed").forEach(c => c.classList.remove("pressed"));
+    document.querySelectorAll(".card-img img").forEach(i => { i.style.viewTransitionName = ""; });
+  });
+
   window.Venora = { DEFAULT_DESC, esc, waLink, ICON, artSvg, productCard, productUrl, priceText, enquiryText, COLOURS, colourCodes, photo, thumbPhoto, cardPhoto, zoomClass, swatches };
   renderChrome();
+  setupReveal();
 })();
