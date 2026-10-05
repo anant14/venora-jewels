@@ -751,3 +751,5 @@ body.leaving main { opacity: 0; transition: opacity .25s ease; }
   .rate-inner { gap: 10px; }
   .rate-label small { display: none; }
 }
+.story-figure figcaption { margin-top: 12px; font-size: .8rem; letter-spacing: .06em; color: var(--muted); text-align: center; }
+.story-figure .frame::after { display: none; }
