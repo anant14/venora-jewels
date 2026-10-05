@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610041732">
+<link rel="stylesheet" href="css/style.css?v=202610051148">
 <meta name="description" content="Venora Jewels — 100% IGI certified lab grown diamond jewellery in hallmarked 9KT, 14KT & 18KT gold, made in Surat.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Venora Jewels">
@@ -23,6 +23,13 @@
 <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#2f0719">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.6/build/index.module.js"
+} }
+</script>
 </head>
 <body data-page="collections">
 <header id="site-header"></header>
@@ -42,9 +49,9 @@
 
 <footer id="site-footer"></footer>
 
-<script src="js/config.js?v=202610041732"></script>
-<script src="js/products.js?v=202610041732"></script>
-<script src="js/main.js?v=202610041732"></script>
+<script src="js/config.js?v=202610051148"></script>
+<script src="js/products.js?v=202610051148"></script>
+<script src="js/main.js?v=202610051148"></script>
 <script>
   const { esc, waLink, ICON, artSvg, productCard, priceText, enquiryText, COLOURS, colourCodes, photo, thumbPhoto, swatches } = Venora;
   const TRYON_ICON = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 8V6a2 2 0 012-2h2M16 4h2a2 2 0 012 2v2M20 16v2a2 2 0 01-2 2h-2M8 20H6a2 2 0 01-2-2v-2"/><circle cx="12" cy="11" r="3.5"/><path d="M7.5 18c.8-2.2 2.5-3.3 4.5-3.3s3.7 1.1 4.5 3.3"/></svg>';
@@ -130,18 +137,40 @@
       try { sessionStorage.setItem("venora-tryon", JSON.stringify(window.clientItem ? window.clientItem(p) : p)); } catch (e) {}
     });
 
-    // Gallery for the selected gold colour
+    // Gallery for the selected gold colour (+ a 360° 3D view for designs that have a 3D model)
     const mainImg = document.getElementById("mainImg");
     const thumbs = document.getElementById("thumbs");
+    let viewer3d = null, showing3d = !!p.model3d;
+    function show3d() {
+      showing3d = true;
+      if (viewer3d) { viewer3d.stop(); viewer3d = null; }
+      mainImg.innerHTML = `<div class="viewer3d" id="viewer3d"><p class="v3d-note">Loading 3D view…</p></div>`;
+      const el = document.getElementById("viewer3d");
+      const media = window.VENORA.media.replace(/\/$/, "");
+      import("./js/viewer3d.js?v=202610051317").then(m => m.mountViewer(el, {
+        glb: `${media}/models/${encodeURIComponent(p.code)}.glb`, hdr: `${media}/models/studio.hdr`, gold: colour || "Y"
+      })).then(v => {
+        if (!showing3d) return v.stop();
+        viewer3d = v;
+        el.querySelector(".v3d-note").textContent = "Drag to rotate · scroll or pinch to zoom";
+      }).catch(() => { el.querySelector(".v3d-note").textContent = "3D view could not load on this device."; });
+    }
+    function hide3d() {
+      showing3d = false;
+      if (viewer3d) { viewer3d.stop(); viewer3d = null; }
+    }
     function showGallery() {
       if (!colour) {
         if (p.photo) { mainImg.innerHTML = `<img src="${photo(p)}" alt="${esc(p.name)}">`; thumbs.innerHTML = ""; }
         return;
       }
       const views = Array.from({ length: p.views }, (_, i) => i + 1);
-      mainImg.innerHTML = `<img src="${photo(p, colour, 1)}" alt="${esc(p.name)} in ${esc(COLOURS[colour])}">`;
-      thumbs.innerHTML = views.length > 1 ? views.map(n =>
-        `<button class="${n === 1 ? "active" : ""}" data-src="${photo(p, colour, n)}" aria-label="View image ${n}"><img src="${thumbPhoto(p, colour, n)}" alt="" loading="lazy"></button>`).join("") : "";
+      if (showing3d && viewer3d) viewer3d.setGold(colour);            // keep the 3D view, just recolour it
+      else if (showing3d) show3d();
+      else mainImg.innerHTML = `<img src="${photo(p, colour, 1)}" alt="${esc(p.name)} in ${esc(COLOURS[colour])}">`;
+      const btn3d = p.model3d ? `<button class="thumb-3d${showing3d ? " active" : ""}" data-three="1" aria-label="360 degree 3D view"><span>360°</span><small>3D</small></button>` : "";
+      thumbs.innerHTML = btn3d + (views.length > 1 || p.model3d ? views.map(n =>
+        `<button class="${n === 1 && !showing3d ? "active" : ""}" data-src="${photo(p, colour, n)}" aria-label="View image ${n}"><img src="${thumbPhoto(p, colour, n)}" alt="" loading="lazy"></button>`).join("") : "");
       // preload the other colours' first photo so switching feels instant
       colours.filter(c => c !== colour).forEach(c => { new Image().src = photo(p, c, 1); });
     }
@@ -152,6 +181,8 @@
       const btn = e.target.closest("button");
       if (!btn) return;
       thumbs.querySelectorAll("button").forEach(b => b.classList.toggle("active", b === btn));
+      if (btn.dataset.three) return show3d();
+      if (showing3d) { hide3d(); mainImg.innerHTML = `<img alt="${esc(p.name)}">`; }
       mainImg.querySelector("img").src = btn.dataset.src;
     });
 
@@ -187,10 +218,10 @@
     document.getElementById("related").innerHTML = related.map(productCard).join("");
   }
 </script>
-<script src="js/firebase-config.js?v=202610041732"></script>
-<script src="js/library.js?v=202610041732"></script>
+<script src="js/firebase-config.js?v=202610051148"></script>
+<script src="js/library.js?v=202610051148"></script>
 <script type="module">
-  import { loadCatalogue } from "./js/auth.js?v=202610041732";
+  import { loadCatalogue } from "./js/auth.js?v=202610051148";
   let shown = false;
   document.addEventListener("venora-auth", async e => {
     const st = e.detail;

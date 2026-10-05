@@ -15,6 +15,7 @@
    description  paragraph shown on the product page
    options      extra choices for the customer (gold colour is added automatically)
    details      specification table on the product page
+   model3d      true when a 3D model exists on R2 at models/<code>.glb (adds the 360° 3D view)
 
    PHOTOS are loaded from Cloudflare R2 (see "media" in js/config.js):
      <category folder>/<code>/<code>_yellow-gold_view-1.webp … (+ _thumb.webp)
@@ -29,7 +30,7 @@ window.PRODUCTS = [
   /* ---------------- EARRINGS ---------------- */
   {
     code: "ER-0001", name: "Classic Solitaire Studs", category: "Earrings", featured: true, price: "",
-    colour: "Y", views: 3,
+    colour: "Y", views: 3, model3d: true,
     short: "Round brilliant solitaires in a four-prong setting.",
     description: "The earrings every jewellery box should begin with — a matched pair of round brilliant lab grown diamonds, held high in four-prong settings with secure screw backs.",
     options: GOLD_PURITY,
