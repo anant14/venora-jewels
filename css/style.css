@@ -753,3 +753,9 @@ body.leaving main { opacity: 0; transition: opacity .25s ease; }
 }
 .story-figure figcaption { margin-top: 12px; font-size: .8rem; letter-spacing: .06em; color: var(--muted); text-align: center; }
 .story-figure .frame::after { display: none; }
+.igi-sample { background: var(--surface); border: 1px solid rgba(201,163,104,.45); padding: 14px; box-shadow: 0 16px 40px rgba(0,0,0,.3); }
+.igi-sample img { width: 100%; display: block; transform: rotate(-1.2deg); box-shadow: 0 8px 24px rgba(0,0,0,.35); transition: transform .4s; }
+.igi-sample a:hover img { transform: rotate(0) scale(1.02); }
+.igi-sample figcaption { font-size: .85rem; color: var(--muted); margin-top: 14px; line-height: 1.6; }
+.igi-sample figcaption b { color: var(--gold-light); font-weight: 500; }
+.igi-sample { max-width: 400px; justify-self: center; width: 100%; }
