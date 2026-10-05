@@ -278,7 +278,7 @@ figure.guide figcaption { text-align: center; font-size: .88rem; color: var(--mu
 
 /* ---------- About ---------- */
 .founders { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
-.founder { background: var(--bg); border: 1px solid var(--line); padding: 36px; display: grid; grid-template-columns: 150px 1fr; gap: 28px; align-items: start; }
+.founder { background: var(--bg); border: 1px solid var(--line); padding: 36px; display: grid; grid-template-columns: 190px 1fr; gap: 28px; align-items: start; }
 .founder-photo { aspect-ratio: 4 / 5; background: linear-gradient(150deg, var(--cream), #e2d6c5); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
 .founder-photo::after { content: ""; position: absolute; inset: 8px; border: 1px solid rgba(176,141,87,.45); }
 .founder-photo span { font-family: var(--serif); font-size: 2.6rem; color: var(--gold-dark); letter-spacing: .08em; }
