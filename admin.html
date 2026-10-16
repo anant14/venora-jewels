@@ -102,10 +102,10 @@
     <section class="admin-tab" id="tab-rates" hidden>
       <div class="admin-card">
         <h2>Today's gold rate</h2>
-        <p class="muted">Price per gram in ₹. It appears in the bar at the top of every page. Update it every morning.</p>
+        <p class="muted">Price per <b>10 grams</b> in ₹. It appears in the bar at the top of every page. Update it every morning.</p>
         <p class="status" id="rateUpdated"></p>
         <div class="rate-grid">
-          <div class="field"><label for="r24">24KT</label><input id="r24" type="number" min="0" step="1" inputmode="numeric" placeholder="e.g. 7450"></div>
+          <div class="field"><label for="r24">24KT</label><input id="r24" type="number" min="0" step="1" inputmode="numeric" placeholder="e.g. 148350"></div>
           <div class="field"><label for="r22">22KT</label><input id="r22" type="number" min="0" step="1" inputmode="numeric"></div>
           <div class="field"><label for="r18">18KT</label><input id="r18" type="number" min="0" step="1" inputmode="numeric"></div>
           <div class="field"><label for="r14">14KT</label><input id="r14" type="number" min="0" step="1" inputmode="numeric"></div>
@@ -651,7 +651,7 @@
     if (!Object.values(rates).some(v => v)) { $("rateMsg").textContent = "Enter at least one rate."; return; }
     $("rateSave").disabled = true;
     try {
-      await setDoc(doc(db, "public", "goldRates"), { rates, show: $("rateShow").checked, updatedAt: serverTimestamp(), updatedBy: (await ready()).user.email });
+      await setDoc(doc(db, "public", "goldRates"), { rates, unit: "10g", show: $("rateShow").checked, updatedAt: serverTimestamp(), updatedBy: (await ready()).user.email });
       $("rateMsg").textContent = "Saved — the website shows the new rate now.";
       loadRates();
     } catch (e) { $("rateMsg").textContent = "Could not save: " + e.message; }

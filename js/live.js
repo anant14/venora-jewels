@@ -24,7 +24,7 @@ function renderBar(r, offer) {
   const updated = toDate(r && r.updatedAt);
   const items = rates.map(([k, v]) => `<span class="rate-item">${k}KT <b>${inr(v)}</b></span>`).join("");
   const track = rates.length
-    ? `<span class="rate-label">Today's gold rate <small>per gram</small></span>${items}${updated ? `<span class="rate-date">Updated ${updated.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>` : ""}`
+    ? `<span class="rate-label">Today's gold rate <small>per 10 g</small></span>${items}${updated ? `<span class="rate-date">Updated ${updated.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>` : ""}`
     : "";
   const bar = document.createElement("div");
   bar.className = "rate-bar";
