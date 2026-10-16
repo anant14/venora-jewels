@@ -103,6 +103,7 @@
   const NAV = [
     ["index.html", "Home", "home"],
     ["collections.html", "Collections", "collections"],
+    ["stock.html", "Ready Stock", "stock"],
     ["about.html", "About Us", "about"],
     ["why-lab-grown.html", "Why Lab-Grown", "why"],
     ["contact.html", "Contact", "contact"]

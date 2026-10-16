@@ -1,7 +1,7 @@
 /* Venora Jewels — today's gold rate bar (every page) and live offers (Home page).
    Both are managed in the admin panel ("Gold rate & offers"). An offer shows only while it is
    switched on and between its optional start and end dates. */
-import { db, doc, getDoc, collection, getDocs } from "./auth.js?v=202610051430";
+import { db, doc, getDoc, collection, getDocs } from "./auth.js?v=202610162102";
 
 const { esc, waLink } = window.Venora;
 const toDate = t => (t && typeof t.toDate === "function" ? t.toDate() : null);
@@ -45,21 +45,45 @@ function renderBar(r, offer) {
 function renderOffers(list) {
   const section = document.getElementById("offers");
   if (!section || !list.length) return;
-  document.getElementById("offerGrid").innerHTML = list.map(o => {
+  const slides = list.map((o, i) => {
     const { href, external } = offerHref(o);
     const until = toDate(o.end);
-    return `<article class="offer-card${o.image ? "" : " text-only"}">
-      ${o.image ? `<div class="offer-img"><img src="${esc(o.image)}" alt="${esc(o.title)}" loading="lazy"></div>` : ""}
+    return `<article class="offer-slide${o.image ? " has-img" : ""}${i ? "" : " active"}" aria-hidden="${i ? "true" : "false"}">
+      ${o.image ? `<div class="offer-img"><img src="${esc(o.image)}" alt="${esc(o.title)}"></div>` : ""}
       <div class="offer-body">
         <span class="eyebrow">${until ? "Offer ends " + until.toLocaleDateString("en-IN", { day: "numeric", month: "long" }) : "Limited offer"}</span>
         <h3>${esc(o.title)}</h3>
         ${o.text ? `<p>${esc(o.text)}</p>` : ""}
-        <a class="btn ${external && href.includes("wa.me") ? "btn-wa" : "btn-dark"}" href="${esc(href)}"${external ? ' target="_blank" rel="noopener"' : ""}>${esc(o.cta || (href.includes("wa.me") ? "Enquire on WhatsApp" : "View offer"))}</a>
+        <a class="btn ${href.includes("wa.me") ? "btn-wa" : "btn-dark"}" href="${esc(href)}"${external ? ' target="_blank" rel="noopener"' : ""}>${esc(o.cta || (href.includes("wa.me") ? "Enquire on WhatsApp" : "View offer"))}</a>
       </div>
     </article>`;
   }).join("");
+  const many = list.length > 1;
+  const box = document.getElementById("offerGrid");
+  box.className = "offer-carousel";
+  box.innerHTML = `<div class="offer-track">${slides}</div>
+    ${many ? `<button class="oc-arrow prev" aria-label="Previous offer">‹</button><button class="oc-arrow next" aria-label="Next offer">›</button>
+    <div class="oc-dots">${list.map((_, i) => `<button class="${i ? "" : "active"}" data-i="${i}" aria-label="Offer ${i + 1}"></button>`).join("")}</div>` : ""}`;
   section.hidden = false;
   if (location.hash === "#offers") section.scrollIntoView({ behavior: "smooth" });
+  if (!many) return;
+  const all = [...box.querySelectorAll(".offer-slide")], dots = [...box.querySelectorAll(".oc-dots button")];
+  let at = 0, timer = 0;
+  const go = i => {
+    at = (i + all.length) % all.length;
+    all.forEach((s, k) => { s.classList.toggle("active", k === at); s.setAttribute("aria-hidden", k !== at); });
+    dots.forEach((d, k) => d.classList.toggle("active", k === at));
+  };
+  const play = () => { clearInterval(timer); if (!matchMedia("(prefers-reduced-motion: reduce)").matches) timer = setInterval(() => go(at + 1), 5000); };
+  box.querySelector(".prev").onclick = () => { go(at - 1); play(); };
+  box.querySelector(".next").onclick = () => { go(at + 1); play(); };
+  dots.forEach(d => d.onclick = () => { go(+d.dataset.i); play(); });
+  box.addEventListener("mouseenter", () => clearInterval(timer));
+  box.addEventListener("mouseleave", play);
+  let x0 = null;
+  box.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
+  box.addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) { go(at + (dx < 0 ? 1 : -1)); play(); } x0 = null; });
+  play();
 }
 
 (async function () {

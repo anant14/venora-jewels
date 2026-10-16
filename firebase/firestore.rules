@@ -8,6 +8,8 @@ rules_version = '2';
 //  sets/{setId}      hand-picked design sets an admin can give to particular customers
 //  public/goldRates  today's gold rate per gram (everyone can read; admins write)
 //  offers/{id}       promotional offers (text and/or image, on/off, optional dates)
+//  stock/{id}        ready-stock items (public details, photos/videos)
+//  stockPrices/{id}  ready-stock prices (logged-in customers with a profile, admins)
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -79,6 +81,16 @@ service cloud.firestore {
     }
     match /offers/{offerId} {
       allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ready stock: details are public; prices only for signed-in customers with a profile
+    match /stock/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /stockPrices/{itemId} {
+      allow read: if isAdmin() || (signedIn() && exists(/databases/$(database)/documents/customers/$(request.auth.uid)));
       allow write: if isAdmin();
     }
 

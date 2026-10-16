@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ready Stock | Venora Jewels</title>
+<meta name="description" content="Ready-to-ship lab grown diamond rings, tops and bracelets from Venora Jewels — real photos and videos, with gold and diamond weights.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=202610162103">
+<link rel="canonical" href="https://www.venorajewels.com/stock.html">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+<meta name="theme-color" content="#2f0719">
+</head>
+<body data-page="stock">
+<header id="site-header"></header>
+
+<main>
+  <div class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">Ready Stock</span>
+      <h1>Ready to wear, ready to ship</h1>
+      <p>Finished pieces available today — real photos and videos of the exact piece you'll receive.</p>
+    </div>
+  </div>
+
+  <section class="offer-carousel-wrap" id="offers" hidden>
+    <div class="wrap"><div class="offer-carousel" id="offerGrid"></div></div>
+  </section>
+
+  <section class="tight">
+    <div class="wrap">
+      <div class="member-banner" id="priceBanner" hidden></div>
+      <div class="toolbar">
+        <div class="filters" id="stockFilters"></div>
+        <span class="count" id="stockCount"></span>
+      </div>
+      <div class="grid stock-grid" id="stockGrid"><p class="muted">Loading ready stock…</p></div>
+    </div>
+  </section>
+</main>
+
+<!-- one stock item: photos + videos and details -->
+<dialog class="stock-dialog" id="stockDlg">
+  <button class="stock-close" id="stockClose" aria-label="Close">×</button>
+  <div class="stock-detail" id="stockDetail"></div>
+</dialog>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js?v=202610162102"></script>
+<script src="js/products.js?v=202610162102"></script>
+<script src="js/main.js?v=202610162102"></script>
+<script src="js/firebase-config.js?v=202610162102"></script>
+<script type="module" src="js/auth.js?v=202610162102"></script>
+<script type="module" src="js/live.js?v=202610162102"></script>
+<script type="module" src="js/stock.js?v=202610162102"></script>
+</body>
+</html>

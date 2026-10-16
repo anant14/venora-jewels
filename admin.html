@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610051439">
+<link rel="stylesheet" href="css/style.css?v=202610162103">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
 <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
@@ -33,6 +33,7 @@
 
     <div class="admin-tabs" role="tablist">
       <button class="active" data-tab="customers">Customers</button>
+      <button data-tab="stock">Ready stock</button>
       <button data-tab="rates">Gold rate &amp; offers</button>
       <button data-tab="switch">Catalogue switch</button>
       <button data-tab="sets">Catalogue sets</button>
@@ -50,6 +51,51 @@
         </div>
       </div>
       <div class="table-wrap"><table class="admin-table" id="custTable"></table></div>
+    </section>
+
+    <!-- READY STOCK -->
+    <section class="admin-tab" id="tab-stock" hidden>
+      <div class="toolbar">
+        <div><p class="muted">Real pieces in stock. Photos and videos upload straight to Cloudflare R2. Prices are shown only to logged-in customers.</p></div>
+        <div class="btn-row"><a class="btn btn-ghost btn-sm" href="stock.html" target="_blank">View page</a><button class="btn btn-dark btn-sm" id="newStockBtn" type="button">+ Add stock item</button></div>
+      </div>
+      <div id="stockList" class="set-list"></div>
+
+      <div class="admin-card" id="stockEditor" hidden>
+        <h2 id="stockEditorTitle">New stock item</h2>
+        <div class="row">
+          <div class="field"><label for="sTitle">Name *</label><input id="sTitle" maxlength="80" placeholder="e.g. Oval Halo Ring"></div>
+          <div class="field"><label for="sCode">Design / stock code *</label><input id="sCode" maxlength="40" placeholder="e.g. RS-1024"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="sCat">Category *</label><select id="sCat"><option>Rings</option><option>Tops</option><option>Bracelets</option></select></div>
+          <div class="field"><label for="sStatus">Status</label><select id="sStatus"><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold</option></select></div>
+        </div>
+        <div class="rate-grid stock-fields">
+          <div class="field"><label for="sKt">Gold karat *</label><select id="sKt"><option>18KT</option><option>14KT</option><option>9KT</option><option>22KT</option></select></div>
+          <div class="field"><label for="sColour">Gold colour</label><select id="sColour"><option value="">—</option><option>Yellow Gold</option><option>Rose Gold</option><option>White Gold</option><option>Two-tone</option></select></div>
+          <div class="field"><label for="sGross">Gross wt (g) *</label><input id="sGross" type="number" min="0" step="0.001" inputmode="decimal"></div>
+          <div class="field"><label for="sNet">Gold wt (g)</label><input id="sNet" type="number" min="0" step="0.001" inputmode="decimal"></div>
+          <div class="field"><label for="sDia">Diamond wt (ct) *</label><input id="sDia" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          <div class="field"><label for="sPcs">Diamond pcs</label><input id="sPcs" type="number" min="0" step="1" inputmode="numeric"></div>
+          <div class="field"><label for="sSize">Size</label><input id="sSize" maxlength="20" placeholder="e.g. 12 / 6.5 in"></div>
+          <div class="field"><label for="sPrice">Price ₹ (members only)</label><input id="sPrice" type="number" min="0" step="1" inputmode="numeric"></div>
+          <div class="field"><label for="sMrp">Was ₹ (optional)</label><input id="sMrp" type="number" min="0" step="1" inputmode="numeric"></div>
+        </div>
+        <div class="field"><label for="sNotes">Notes (optional)</label><textarea id="sNotes" maxlength="400" placeholder="e.g. IGI certified centre stone, ring size can be adjusted"></textarea></div>
+        <div class="field">
+          <label for="sFiles">Photos &amp; videos</label>
+          <input id="sFiles" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" multiple>
+          <p class="form-note left">Photos up to 15 MB, videos up to 95 MB (short clips of 10–30 seconds work best). The first item is the cover — use the arrows to reorder.</p>
+        </div>
+        <div class="stock-media-edit" id="sMedia"></div>
+        <label class="check"><input type="checkbox" id="sVisible" checked> Show on the website</label>
+        <p class="form-error" id="sErr" hidden></p>
+        <div class="btn-row">
+          <button class="btn btn-dark" id="sSave" type="button">Save item</button>
+          <button class="btn btn-ghost" id="sCancel" type="button">Cancel</button>
+        </div>
+      </div>
     </section>
 
     <!-- GOLD RATE + OFFERS (shown to every visitor) -->
@@ -213,14 +259,14 @@
 
 <footer id="site-footer"></footer>
 
-<script src="js/config.js?v=202610051430"></script>
-<script src="js/products.js?v=202610051430"></script>
-<script src="js/main.js?v=202610051430"></script>
-<script src="js/firebase-config.js?v=202610051430"></script>
-<script src="js/library.js?v=202610051430"></script>
+<script src="js/config.js?v=202610162102"></script>
+<script src="js/products.js?v=202610162102"></script>
+<script src="js/main.js?v=202610162102"></script>
+<script src="js/firebase-config.js?v=202610162102"></script>
+<script src="js/library.js?v=202610162102"></script>
 <script type="module">
   import { ADMINS, login, logout, ready, isActive, loadCatalogue, db, doc, getDoc, setDoc, deleteDoc,
-           collection, getDocs, serverTimestamp, Timestamp } from "./js/auth.js?v=202610051430";
+           collection, getDocs, serverTimestamp, Timestamp } from "./js/auth.js?v=202610162102";
   const { esc, productCard, COLOURS } = Venora;
   const $ = id => document.getElementById(id);
 
@@ -262,7 +308,7 @@
     $("who").innerHTML = `Signed in as ${esc(state.user.email)} · <a href="#" id="outLink">Log out</a>`;
     $("outLink").onclick = e => { e.preventDefault(); logout(); };
     designs = mergeDesigns(await loadCatalogue());
-    await Promise.all([loadCustomers(), loadSwitch(), loadSets(), loadRates(), loadOffers()]);
+    await Promise.all([loadCustomers(), loadSwitch(), loadSets(), loadRates(), loadOffers(), loadStock()]);
     renderDesigns("All");
     // the full R2 library (3,800+ designs) loads in the background
     loadLibrary().then(items => {
@@ -699,6 +745,117 @@
       loadOffers();
     }
     if (t.del && confirm("Delete this offer?")) { await deleteDoc(doc(db, "offers", t.del)); loadOffers(); }
+  });
+
+
+  /* ---------- ready stock ---------- */
+  let stock = [], stockPrices = {}, editingStock = null, sMedia = [];
+  const num = id => { const v = $(id).value; return v === "" ? null : +v; };
+  async function loadStock() {
+    const [a, b] = await Promise.all([getDocs(collection(db, "stock")), getDocs(collection(db, "stockPrices"))]);
+    stock = a.docs.map(d => ({ id: d.id, ...d.data() })).sort((x, y) => (y.order || 0) - (x.order || 0));
+    stockPrices = Object.fromEntries(b.docs.map(d => [d.id, d.data()]));
+    $("stockList").innerHTML = stock.length ? stock.map(it => {
+      const m = (it.media || [])[0], pr = stockPrices[it.id];
+      return `<div class="set-row offer-row">
+        ${m ? (m.type === "video" ? `<video src="${esc(m.url)}#t=0.5" muted preload="metadata"></video>` : `<img src="${esc(m.url)}" alt="">`) : `<div class="offer-thumb">—</div>`}
+        <div class="offer-row-text"><b>${esc(it.title)}</b> <span class="muted">${esc(it.code || "")} · ${esc(it.category)}</span>
+          <span class="pill ${it.status === "sold" ? "off" : it.status === "reserved" ? "" : "on"}">${esc(it.status || "available")}</span>${it.visible === false ? ` <span class="pill">hidden</span>` : ""}
+          <br><span class="muted">${esc(it.goldKt || "")} · ${it.grossWt ?? "–"} g · ${it.diamondWt ?? "–"} ct · ${(it.media || []).length} photo/video · ${pr && pr.price ? "₹" + Number(pr.price).toLocaleString("en-IN") : "no price"}</span></div>
+        <div class="btn-row">
+          <button class="btn btn-ghost btn-sm" data-sedit="${esc(it.id)}">Edit</button>
+          <button class="btn btn-ghost btn-sm" data-ssold="${esc(it.id)}">${it.status === "sold" ? "Mark available" : "Mark sold"}</button>
+          <button class="btn btn-ghost btn-sm" data-sdel="${esc(it.id)}">Delete</button>
+        </div></div>`;
+    }).join("") : `<p class="muted">No stock items yet — click “+ Add stock item”.</p>`;
+  }
+  function renderSMedia() {
+    $("sMedia").innerHTML = sMedia.map((m, i) => `<div class="sm-item">
+      ${m.uploading ? `<div class="sm-up">${esc(m.uploading)}</div>` : m.type === "video" ? `<video src="${esc(m.url)}#t=0.5" muted preload="metadata"></video><span class="sm-tag">▶</span>` : `<img src="${esc(m.url)}" alt="">`}
+      ${i === 0 && !m.uploading ? `<span class="sm-cover">Cover</span>` : ""}
+      ${m.uploading ? "" : `<div class="sm-btns"><button type="button" data-mv="${i}" data-d="-1" aria-label="Move left">‹</button><button type="button" data-rm="${i}" aria-label="Remove">×</button><button type="button" data-mv="${i}" data-d="1" aria-label="Move right">›</button></div>`}
+    </div>`).join("");
+  }
+  $("sMedia").addEventListener("click", e => {
+    const t = e.target.dataset;
+    if (t.rm !== undefined) { sMedia.splice(+t.rm, 1); renderSMedia(); }
+    if (t.mv !== undefined) { const i = +t.mv, j = i + +t.d; if (j >= 0 && j < sMedia.length) { [sMedia[i], sMedia[j]] = [sMedia[j], sMedia[i]]; renderSMedia(); } }
+  });
+  function openStock(it) {
+    editingStock = it; const pr = it ? stockPrices[it.id] || {} : {};
+    $("stockEditorTitle").textContent = it ? "Edit stock item" : "New stock item";
+    $("sTitle").value = it ? it.title : ""; $("sCode").value = it ? it.code || "" : "";
+    $("sCat").value = it ? it.category : "Rings"; $("sStatus").value = it ? it.status || "available" : "available";
+    $("sKt").value = it ? it.goldKt || "18KT" : "18KT"; $("sColour").value = it ? it.goldColour || "" : "";
+    $("sGross").value = it?.grossWt ?? ""; $("sNet").value = it?.netWt ?? ""; $("sDia").value = it?.diamondWt ?? "";
+    $("sPcs").value = it?.diamondPcs ?? ""; $("sSize").value = it?.size || ""; $("sNotes").value = it?.notes || "";
+    $("sPrice").value = pr.price ?? ""; $("sMrp").value = pr.mrp ?? "";
+    $("sVisible").checked = it ? it.visible !== false : true;
+    sMedia = it ? [...(it.media || [])] : []; renderSMedia();
+    $("sFiles").value = ""; $("sErr").hidden = true;
+    $("stockEditor").hidden = false; $("stockEditor").scrollIntoView({ behavior: "smooth" });
+  }
+  $("newStockBtn").onclick = () => openStock(null);
+  $("sCancel").onclick = () => { $("stockEditor").hidden = true; };
+  $("sFiles").addEventListener("change", async () => {
+    const files = [...$("sFiles").files]; $("sFiles").value = "";
+    const token = await window.VenoraAuth.idToken();
+    for (const f of files) {
+      const isVideo = f.type.startsWith("video/");
+      const max = (isVideo ? 95 : 15) * 1048576;
+      const slot = { type: isVideo ? "video" : "image", uploading: `Uploading ${f.name}…` };
+      if (f.size > max) { $("sErr").hidden = false; $("sErr").textContent = `${f.name} is too large (max ${isVideo ? 95 : 15} MB).`; continue; }
+      sMedia.push(slot); renderSMedia();
+      try {
+        const res = await fetch("https://venora-cad.jewelsvenora.workers.dev/upload?folder=stock", { method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": f.type || (isVideo ? "video/mp4" : "image/jpeg") }, body: f });
+        const out = await res.json();
+        if (!res.ok) throw new Error(out.error || res.status);
+        delete slot.uploading; slot.url = out.url;
+      } catch (err) {
+        sMedia.splice(sMedia.indexOf(slot), 1);
+        $("sErr").hidden = false; $("sErr").textContent = `${f.name}: upload failed (${err.message}).`;
+      }
+      renderSMedia();
+    }
+  });
+  $("sSave").onclick = async () => {
+    const err = $("sErr"); err.hidden = true;
+    const problems = [];
+    if (!$("sTitle").value.trim()) problems.push("Add a name.");
+    if (!$("sCode").value.trim()) problems.push("Add the stock code.");
+    if (num("sGross") === null) problems.push("Add the gross weight.");
+    if (num("sDia") === null) problems.push("Add the diamond weight.");
+    if (sMedia.some(m => m.uploading)) problems.push("Wait for uploads to finish.");
+    if (problems.length) { err.hidden = false; err.textContent = problems.join(" "); return; }
+    const id = editingStock ? editingStock.id : "stk-" + Date.now().toString(36);
+    const data = {
+      title: $("sTitle").value.trim(), code: $("sCode").value.trim(), category: $("sCat").value, status: $("sStatus").value,
+      goldKt: $("sKt").value, goldColour: $("sColour").value, grossWt: num("sGross"), netWt: num("sNet"),
+      diamondWt: num("sDia"), diamondPcs: num("sPcs"), size: $("sSize").value.trim(), notes: $("sNotes").value.trim(),
+      media: sMedia.map(({ type, url }) => ({ type, url })), visible: $("sVisible").checked,
+      order: editingStock ? editingStock.order || Date.now() : Date.now(), updatedAt: serverTimestamp()
+    };
+    $("sSave").disabled = true;
+    try {
+      await setDoc(doc(db, "stock", id), data);
+      const price = num("sPrice"), mrp = num("sMrp");
+      if (price !== null || mrp !== null) await setDoc(doc(db, "stockPrices", id), { price, mrp, updatedAt: serverTimestamp() });
+      else await deleteDoc(doc(db, "stockPrices", id)).catch(() => {});
+      $("stockEditor").hidden = true; await loadStock();
+    } catch (e) { err.hidden = false; err.textContent = "Could not save: " + e.message; }
+    $("sSave").disabled = false;
+  };
+  $("stockList").addEventListener("click", async e => {
+    const t = e.target.dataset;
+    if (t.sedit) openStock(stock.find(i => i.id === t.sedit));
+    if (t.ssold) {
+      const it = stock.find(i => i.id === t.ssold);
+      await setDoc(doc(db, "stock", it.id), { status: it.status === "sold" ? "available" : "sold", updatedAt: serverTimestamp() }, { merge: true });
+      loadStock();
+    }
+    if (t.sdel && confirm("Delete this stock item? (Its photos stay in storage.)")) {
+      await deleteDoc(doc(db, "stock", t.sdel)); await deleteDoc(doc(db, "stockPrices", t.sdel)).catch(() => {}); loadStock();
+    }
   });
 
   document.addEventListener("venora-auth", e => start(e.detail));

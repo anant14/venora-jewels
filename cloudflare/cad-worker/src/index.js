@@ -1,8 +1,9 @@
 /* Venora Jewels — admin service (Cloudflare Worker). Every route needs a signed-in admin
    (Firebase ID token in the Authorization header).
    GET  /cad/<path>  -> CAD sheet from the private "venora-cad" bucket
-   POST /upload      -> stores an offer image (JPG/PNG/WebP, max 5 MB) in the public
-                        "venora-media" bucket under offers/ and returns its public URL */
+   POST /upload[?folder=stock] -> stores an image (JPG/PNG/WebP, max 15 MB) or, for stock,
+                        a video (MP4/MOV/WebM, max 95 MB) in the public "venora-media" bucket
+                        under offers/ or stock/ and returns its public URL */
 
 const JWKS_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
 let jwks = { keys: [], expires: 0 };
@@ -65,14 +66,19 @@ export default {
     }
 
     if (isUpload) {
-      const TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+      const IMAGES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+      const VIDEOS = { "video/mp4": "mp4", "video/quicktime": "mov", "video/webm": "webm" };
+      const folder = url.searchParams.get("folder") === "stock" ? "stock" : "offers";
       const type = (request.headers.get("Content-Type") || "").split(";")[0].trim();
-      if (!TYPES[type]) return Response.json({ error: "Please upload a JPG, PNG or WebP image." }, { status: 415, headers: cors });
-      const body = await request.arrayBuffer();
-      if (body.byteLength > 5 * 1024 * 1024) return Response.json({ error: "Image is larger than 5 MB." }, { status: 413, headers: cors });
+      const ext = IMAGES[type] || (folder === "stock" && VIDEOS[type]);
+      if (!ext) return Response.json({ error: folder === "stock" ? "Please upload a JPG/PNG/WebP photo or an MP4/MOV/WebM video." : "Please upload a JPG, PNG or WebP image." }, { status: 415, headers: cors });
+      const max = VIDEOS[type] ? 95 * 1024 * 1024 : 15 * 1024 * 1024;
+      const len = Number(request.headers.get("Content-Length") || 0);
+      if (len > max) return Response.json({ error: `File is larger than ${max / 1048576} MB.` }, { status: 413, headers: cors });
       const day = new Date().toISOString().slice(0, 10);
-      const key = `offers/${day}-${crypto.randomUUID().slice(0, 8)}.${TYPES[type]}`;
-      await env.MEDIA.put(key, body, { httpMetadata: { contentType: type, cacheControl: "public, max-age=31536000" } });
+      const key = `${folder}/${day}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+      // stream straight into R2 (videos can be large)
+      await env.MEDIA.put(key, request.body, { httpMetadata: { contentType: type, cacheControl: "public, max-age=31536000" } });
       return Response.json({ url: `${env.MEDIA_URL}/${key}` }, { headers: cors });
     }
 
