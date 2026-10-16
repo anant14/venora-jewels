@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Wishlist | Venora Jewels</title>
+<meta name="description" content="Your saved Venora Jewels designs and ready stock pieces.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=202610162146">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+<meta name="theme-color" content="#2f0719">
+</head>
+<body data-page="wishlist">
+<header id="site-header"></header>
+
+<main>
+  <div class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">Wishlist</span>
+      <h1>Your wishlist</h1>
+      <p>Designs and ready stock pieces you have saved. Share them with us on WhatsApp and we will help you choose.</p>
+    </div>
+  </div>
+  <section class="tight">
+    <div class="wrap">
+      <div class="member-banner" id="wishBanner" hidden></div>
+      <div class="toolbar">
+        <span class="count" id="wishCount"></span>
+        <div class="btn-row" id="wishActions"></div>
+      </div>
+      <div class="grid" id="wishGrid"></div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js?v=202610162146"></script>
+<script src="js/products.js?v=202610162146"></script>
+<script src="js/main.js?v=202610162146"></script>
+<script src="js/firebase-config.js?v=202610162146"></script>
+<script type="module" src="js/auth.js?v=202610162146"></script>
+<script type="module" src="js/live.js?v=202610162146"></script>
+<script type="module" src="js/extras.js?v=202610162146"></script>
+<script type="module">
+  const { esc, waLink, ICON } = window.Venora;
+  const $ = id => document.getElementById(id);
+  function render() {
+    const W = window.VenoraWish; if (!W) return;
+    const items = W.list();
+    $("wishCount").textContent = items.length ? `${items.length} saved piece${items.length > 1 ? "s" : ""}` : "";
+    $("wishActions").innerHTML = items.length ? `<a class="btn btn-wa btn-sm" target="_blank" rel="noopener" href="${waLink("Hello Venora Jewels, these are the pieces I love:\n" + items.map(i => `• ${i.name} (${i.code || i.id})${i.kind === "stock" ? " — ready stock" : ""}`).join("\n") + "\nPlease share prices and details.")}">${ICON.whatsapp} Send my wishlist on WhatsApp</a>` : "";
+    $("wishGrid").innerHTML = items.length ? items.map(i => `
+      <article class="card wish-card">
+        <a class="card-img" href="${W.url(i)}">${i.img ? (i.video ? `<video src="${esc(i.img)}#t=0.5" muted preload="metadata"></video>` : `<img src="${esc(i.img)}" alt="${esc(i.name)}" loading="lazy">`) : ""}</a>
+        <div class="card-body">
+          <span class="card-cat">${esc(i.category || "")}${i.kind === "stock" ? " · Ready stock" : ""}</span>
+          <h3><a href="${W.url(i)}">${esc(i.name)}</a></h3>
+          <p class="card-short">${esc(i.code || "")}${i.goldKt ? " · " + esc(i.goldKt) : ""}${i.diamondWt ? " · " + esc(i.diamondWt) + " ct" : ""}</p>
+          <div class="card-actions">
+            <a class="btn btn-ghost btn-sm" href="${W.url(i)}">View</a>
+            <button class="btn btn-ghost btn-sm" data-unwish="${esc(i.key)}">Remove</button>
+          </div>
+        </div>
+      </article>`).join("")
+      : `<div class="empty"><h1>Nothing saved yet</h1><p>Tap the ♡ on any design or ready stock piece to save it here.</p><a class="btn btn-dark" href="collections.html">Explore designs</a> <a class="btn btn-ghost" href="stock.html">Ready stock</a></div>`;
+  }
+  document.addEventListener("click", e => { const b = e.target.closest("[data-unwish]"); if (b) window.VenoraWish.remove(b.dataset.unwish); });
+  document.addEventListener("venora-wishlist", render);
+  document.addEventListener("venora-auth", e => {
+    const st = e.detail, b = $("wishBanner");
+    b.hidden = !!st.user;
+    if (!st.user) b.innerHTML = `<div><b>Keep your wishlist safe</b><span>Log in to save it to your account and see it on any device.</span></div><a class="btn btn-dark btn-sm" href="account.html">Login / Sign up</a>`;
+  });
+  render();
+</script>
+</body>
+</html>

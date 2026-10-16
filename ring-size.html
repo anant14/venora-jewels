@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ring Size Guide | Venora Jewels</title>
+<meta name="description" content="Find your ring size at home: Indian ring size chart with US equivalents, an on-screen ring sizer, a thread-measuring guide and a printable sizer.">
+<link rel="canonical" href="https://www.venorajewels.com/ring-size.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=202610162146">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+<meta name="theme-color" content="#2f0719">
+</head>
+<body data-page="ringsize">
+<header id="site-header"></header>
+
+<main>
+  <div class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">Ring size guide</span>
+      <h1>Find your ring size</h1>
+      <p>Four easy ways to find your size at home — or message us and we will courier a free ring sizer.</p>
+    </div>
+  </div>
+  <section class="tight">
+    <div class="wrap">
+      <div class="subnav-inline">
+        <a href="#sizer">On-screen sizer</a><a href="#measure">Measure at home</a><a href="#chart">Size chart</a><a href="#print">Printable sizer</a>
+      </div>
+
+      <!-- ON-SCREEN SIZER -->
+      <div class="rs-block" id="sizer">
+        <div class="rs-text">
+          <span class="eyebrow">Step 1 · Calibrate</span>
+          <h2>Match a bank card</h2>
+          <p class="muted">Screens differ in size, so first hold any bank/ID card (standard 85.6 mm) against the screen and move the slider until the gold box is exactly as wide as your card.</p>
+          <input type="range" id="calib" min="2" max="9" step="0.01" aria-label="Card width calibration">
+          <div class="rs-card-wrap"><div class="rs-card" id="card"><span>Hold your card here</span></div></div>
+        </div>
+        <div class="rs-text">
+          <span class="eyebrow">Step 2 · Measure</span>
+          <h2>Place a ring you own</h2>
+          <p class="muted">Put a ring that fits you well on the circle and adjust until the circle matches the <b>inside</b> edge of the ring.</p>
+          <input type="range" id="dia" min="13" max="23" step="0.05" value="16.5" aria-label="Ring inside diameter">
+          <div class="rs-ring-wrap"><div class="rs-ring" id="ring"></div></div>
+          <div class="rs-result" id="result"></div>
+        </div>
+      </div>
+
+      <!-- MEASURE AT HOME -->
+      <div class="rs-steps" id="measure">
+        <div class="section-head"><span class="eyebrow">No ring? No problem</span><h2>Measure with a thread</h2></div>
+        <ol class="rs-howto">
+          <li><b>Wrap</b> a thread or thin paper strip around the base of your finger — snug, but not tight.</li>
+          <li><b>Mark</b> the point where it overlaps with a pen.</li>
+          <li><b>Measure</b> the length up to the mark with a ruler in millimetres.</li>
+          <li><b>Find</b> that number below in the <a href="#chart">size chart</a> (circumference column).</li>
+        </ol>
+        <div class="rs-tips">
+          <p>✦ Measure at the end of the day, when fingers are slightly larger.</p>
+          <p>✦ Make sure it can slide over your knuckle.</p>
+          <p>✦ Between two sizes? Choose the larger one — and for wide bands, go up half a size.</p>
+          <p>✦ Unsure? <a href="#" data-wa="Hello Venora Jewels, please help me find my ring size.">Ask us on WhatsApp</a> — we can courier a free ring sizer.</p>
+        </div>
+        <div class="rs-calc">
+          <label for="circ">My thread measured</label>
+          <div><input id="circ" type="number" min="38" max="75" step="0.5" placeholder="e.g. 52" inputmode="decimal"> <span>mm</span></div>
+          <p id="circOut" class="rs-result"></p>
+        </div>
+      </div>
+
+      <!-- CHART -->
+      <div id="chart">
+        <div class="section-head"><span class="eyebrow">Size chart</span><h2>Indian ring sizes</h2><p>US sizes are approximate equivalents.</p></div>
+        <div class="table-wrap"><table class="compare rs-table" id="chartTable"></table></div>
+      </div>
+
+      <!-- PRINTABLE -->
+      <div class="rs-print" id="print">
+        <div class="section-head"><span class="eyebrow">Printable sizer</span><h2>Print and compare</h2>
+          <p>Print this page at <b>100% / “Actual size”</b> (not “Fit to page”). Check the 50 mm line with a ruler, then place your ring on the circles — the right size is the circle that matches its inside edge.</p>
+          <button class="btn btn-dark btn-sm" onclick="window.print()">Print sizer</button></div>
+        <div class="rs-sheet" id="sheet"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js?v=202610162146"></script>
+<script src="js/products.js?v=202610162146"></script>
+<script src="js/main.js?v=202610162146"></script>
+<script src="js/firebase-config.js?v=202610162146"></script>
+<script type="module" src="js/auth.js?v=202610162146"></script>
+<script type="module" src="js/live.js?v=202610162146"></script>
+<script type="module" src="js/extras.js?v=202610162146"></script>
+<script>
+  // Indian ring sizes: inside circumference ≈ 40.8 mm + 1 mm per size
+  const SIZES = Array.from({ length: 30 }, (_, i) => {
+    const n = i + 1, circ = 40.8 + i, dia = circ / Math.PI;
+    const us = Math.round(((dia - 11.63) / 0.8128) * 2) / 2;
+    return { n, circ, dia, us: us < 1 ? "—" : us };
+  });
+  const nearest = mm => SIZES.reduce((a, b) => Math.abs(b.dia - mm) < Math.abs(a.dia - mm) ? b : a);
+  const byCirc = mm => SIZES.reduce((a, b) => Math.abs(b.circ - mm) < Math.abs(a.circ - mm) ? b : a);
+
+  // chart
+  document.getElementById("chartTable").innerHTML = `<thead><tr><th>Indian size</th><th>Circumference</th><th>Inside diameter</th><th>US size (approx.)</th></tr></thead><tbody>` +
+    SIZES.map(s => `<tr id="sz${s.n}"><th>${s.n}</th><td>${s.circ.toFixed(1)} mm</td><td>${s.dia.toFixed(1)} mm</td><td>${s.us}</td></tr>`).join("") + `</tbody>`;
+  const highlight = n => {
+    document.querySelectorAll("#chartTable tr").forEach(r => r.classList.toggle("hl", r.id === "sz" + n));
+  };
+
+  // calibration: px per mm, remembered on this device
+  const calib = document.getElementById("calib"), card = document.getElementById("card");
+  let pxmm = 3.78;
+  try { pxmm = +localStorage.getItem("venora-pxmm") || 96 / 25.4; } catch (e) {}
+  calib.value = pxmm;
+  const dia = document.getElementById("dia"), ring = document.getElementById("ring"), out = document.getElementById("result");
+  function draw() {
+    pxmm = +calib.value;
+    try { localStorage.setItem("venora-pxmm", pxmm); } catch (e) {}
+    card.style.width = (85.6 * pxmm) + "px"; card.style.height = (53.98 * pxmm) + "px";
+    const d = +dia.value;
+    ring.style.width = ring.style.height = (d * pxmm) + "px";
+    const s = nearest(d);
+    out.innerHTML = `Inside diameter <b>${d.toFixed(1)} mm</b> → Indian size <b>${s.n}</b> · US ≈ ${s.us}`;
+    highlight(s.n);
+  }
+  calib.addEventListener("input", draw); dia.addEventListener("input", draw); draw();
+
+  // thread calculator
+  document.getElementById("circ").addEventListener("input", e => {
+    const v = +e.target.value, o = document.getElementById("circOut");
+    if (!v) { o.textContent = ""; return; }
+    const s = byCirc(v);
+    o.innerHTML = v < 40 || v > 71 ? "That's outside our size range — please message us." : `Your size is about <b>Indian ${s.n}</b> (US ≈ ${s.us}).`;
+    highlight(s.n);
+  });
+
+  // printable sheet: real millimetres (prints true to size at 100%)
+  const show = [6, 8, 10, 12, 14, 16, 18, 20, 22, 24];
+  document.getElementById("sheet").innerHTML = `<svg width="180mm" height="120mm" viewBox="0 0 180 120" xmlns="http://www.w3.org/2000/svg" font-family="Jost, sans-serif">
+    <rect x="0" y="0" width="180" height="120" fill="#fff"/>
+    <line x1="10" y1="10" x2="60" y2="10" stroke="#000" stroke-width="0.4"/><line x1="10" y1="7" x2="10" y2="13" stroke="#000" stroke-width="0.4"/><line x1="60" y1="7" x2="60" y2="13" stroke="#000" stroke-width="0.4"/>
+    <text x="64" y="11.5" font-size="3.4">50 mm — check with a ruler</text>
+    ${show.map((n, i) => { const s = SIZES[n - 1], cx = 20 + (i % 5) * 35, cy = 45 + Math.floor(i / 5) * 45;
+      return `<circle cx="${cx}" cy="${cy}" r="${(s.dia / 2).toFixed(2)}" fill="none" stroke="#000" stroke-width="0.3"/><text x="${cx}" y="${cy + s.dia / 2 + 6}" font-size="3.6" text-anchor="middle">Size ${n}</text><text x="${cx}" y="${cy + 1.2}" font-size="2.6" text-anchor="middle" fill="#666">${s.dia.toFixed(1)}mm</text>`; }).join("")}
+  </svg>`;
+</script>
+</body>
+</html>

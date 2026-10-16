@@ -142,6 +142,8 @@
           <div>
             <h4>Explore</h4>
             ${NAV.map(([href, label]) => `<a href="${href}">${label}</a>`).join("")}
+            <a href="ring-size.html">Ring size guide</a>
+            <a href="wishlist.html">My wishlist</a>
           </div>
           <div>
             <h4>Collections</h4>
@@ -247,7 +249,7 @@
     document.querySelectorAll(".card-img img").forEach(i => { i.style.viewTransitionName = ""; });
   });
 
-  window.Venora = { DEFAULT_DESC, esc, waLink, ICON, artSvg, productCard, productUrl, priceText, enquiryText, COLOURS, colourCodes, photo, thumbPhoto, cardPhoto, zoomClass, swatches };
+  window.Venora = { getProduct: code => REGISTRY.get(code) || (window.PRODUCTS || []).find(p => p.code === code), DEFAULT_DESC, esc, waLink, ICON, artSvg, productCard, productUrl, priceText, enquiryText, COLOURS, colourCodes, photo, thumbPhoto, cardPhoto, zoomClass, swatches };
   renderChrome();
   setupReveal();
 })();

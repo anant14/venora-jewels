@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610162116">
+<link rel="stylesheet" href="css/style.css?v=202610162146">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
 <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
@@ -33,6 +33,7 @@
 
     <div class="admin-tabs" role="tablist">
       <button class="active" data-tab="customers">Customers</button>
+      <button data-tab="insights">Insights</button>
       <button data-tab="stock">Ready stock</button>
       <button data-tab="rates">Gold rate &amp; offers</button>
       <button data-tab="switch">Catalogue switch</button>
@@ -53,11 +54,40 @@
       <div class="table-wrap"><table class="admin-table" id="custTable"></table></div>
     </section>
 
+    <!-- INSIGHTS (anonymous visitor analytics) -->
+    <section class="admin-tab" id="tab-insights" hidden>
+      <div class="toolbar">
+        <div class="filters" id="inRange">
+          <button data-days="1">Today</button><button data-days="7" class="active">7 days</button><button data-days="30">30 days</button><button data-days="90">90 days</button>
+        </div>
+        <span class="count muted">Visitors are counted anonymously. Admin visits are not counted.</span>
+      </div>
+      <div class="admin-stats in-kpis" id="inKpis"></div>
+      <div class="in-chart admin-card" id="inChart"></div>
+      <div class="in-grid">
+        <div class="admin-card"><h3>Most viewed designs</h3><div id="inDesigns"></div></div>
+        <div class="admin-card"><h3>Most viewed ready stock</h3><div id="inStock"></div></div>
+        <div class="admin-card"><h3>Most wishlisted</h3><div id="inWish"></div></div>
+        <div class="admin-card"><h3>Pages</h3><div id="inPages"></div></div>
+        <div class="admin-card"><h3>WhatsApp clicks by page</h3><div id="inWa"></div></div>
+        <div class="admin-card"><h3>Actions</h3><div id="inEvents"></div></div>
+      </div>
+    </section>
+
     <!-- READY STOCK -->
     <section class="admin-tab" id="tab-stock" hidden>
       <div class="toolbar">
         <div><p class="muted">Real pieces in stock. Photos and videos upload straight to Cloudflare R2. Prices are shown only to logged-in customers.</p></div>
         <div class="btn-row"><a class="btn btn-ghost btn-sm" href="stock.html" target="_blank">View page</a><button class="btn btn-dark btn-sm" id="newStockBtn" type="button">+ Add stock item</button></div>
+      </div>
+      <div class="admin-card stock-offer-card">
+        <b>Ready stock offer &amp; GST</b> <span class="muted">— used to work out live prices</span>
+        <div class="rate-grid">
+          <div class="field"><label for="oMakingOff">Making discount %</label><input id="oMakingOff" type="number" min="0" max="100" step="0.5"></div>
+          <div class="field"><label for="oDiaOff">Diamond discount %</label><input id="oDiaOff" type="number" min="0" max="100" step="0.5"></div>
+          <div class="field"><label for="oGst">GST %</label><input id="oGst" type="number" min="0" max="28" step="0.5"></div>
+        </div>
+        <button class="btn btn-dark btn-sm" id="oOfferSave" type="button">Save offer &amp; GST</button> <span class="form-note left" id="oOfferMsg"></span>
       </div>
       <div id="stockList" class="set-list"></div>
 
@@ -79,9 +109,23 @@
           <div class="field"><label for="sDia">Diamond wt (ct) *</label><input id="sDia" type="number" min="0" step="0.01" inputmode="decimal"></div>
           <div class="field"><label for="sPcs">Diamond pcs</label><input id="sPcs" type="number" min="0" step="1" inputmode="numeric"></div>
           <div class="field"><label for="sSize">Size</label><input id="sSize" maxlength="20" placeholder="e.g. 12 / 6.5 in"></div>
-          <div class="field"><label for="sPrice">Price ₹ (members only)</label><input id="sPrice" type="number" min="0" step="1" inputmode="numeric"></div>
-          <div class="field"><label for="sMrp">Was ₹ (optional)</label><input id="sMrp" type="number" min="0" step="1" inputmode="numeric"></div>
         </div>
+        <fieldset class="price-box">
+          <legend>Price (shown to logged-in members only)</legend>
+          <div class="field"><label for="sMode">Price type</label>
+            <select id="sMode"><option value="live">Live — worked out daily from today's gold rate</option><option value="fixed">Fixed price</option></select></div>
+          <div class="rate-grid live-only">
+            <div class="field"><label for="sMaking">Making ₹ per gram</label><input id="sMaking" type="number" min="0" step="1" inputmode="numeric" placeholder="e.g. 1200"></div>
+            <div class="field"><label for="sDiaRate">Diamond ₹ per ct</label><input id="sDiaRate" type="number" min="0" step="1" inputmode="numeric" placeholder="e.g. 18000"></div>
+            <div class="field"><label for="sOther">Other charges ₹</label><input id="sOther" type="number" min="0" step="1" inputmode="numeric" placeholder="e.g. certificate"></div>
+          </div>
+          <div class="rate-grid fixed-only">
+            <div class="field"><label for="sPrice">Price ₹</label><input id="sPrice" type="number" min="0" step="1" inputmode="numeric"></div>
+            <div class="field"><label for="sMrp">Was ₹ (optional)</label><input id="sMrp" type="number" min="0" step="1" inputmode="numeric"></div>
+          </div>
+          <label class="check live-only"><input type="checkbox" id="sGst" checked> Add GST</label>
+          <div class="price-preview" id="sPreview"></div>
+        </fieldset>
         <div class="field"><label for="sNotes">Notes (optional)</label><textarea id="sNotes" maxlength="400" placeholder="e.g. IGI certified centre stone, ring size can be adjusted"></textarea></div>
         <div class="field">
           <label for="sFiles">Photos &amp; videos</label>
@@ -259,14 +303,14 @@
 
 <footer id="site-footer"></footer>
 
-<script src="js/config.js?v=202610162102"></script>
-<script src="js/products.js?v=202610162102"></script>
-<script src="js/main.js?v=202610162115"></script>
-<script src="js/firebase-config.js?v=202610162102"></script>
-<script src="js/library.js?v=202610162102"></script>
+<script src="js/config.js?v=202610162146"></script>
+<script src="js/products.js?v=202610162146"></script>
+<script src="js/main.js?v=202610162146"></script>
+<script src="js/firebase-config.js?v=202610162146"></script>
+<script src="js/library.js?v=202610162146"></script>
 <script type="module">
   import { ADMINS, login, logout, ready, isActive, loadCatalogue, db, doc, getDoc, setDoc, deleteDoc,
-           collection, getDocs, serverTimestamp, Timestamp } from "./js/auth.js?v=202610162115";
+           collection, getDocs, serverTimestamp, Timestamp } from "./js/auth.js?v=202610162146";
   const { esc, productCard, COLOURS } = Venora;
   const $ = id => document.getElementById(id);
 
@@ -285,6 +329,7 @@
   const toDate = t => (t && t.toDate ? t.toDate() : t ? new Date(t) : null);
   const fmt = (t, withTime) => { const d = toDate(t); return d ? d.toLocaleString("en-IN", withTime ? { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" } : { day: "numeric", month: "short", year: "numeric" }) : ""; };
 
+  let wishMap = {};
   let customers = [], accessMap = {}, sets = [], designs = [], library = [], editingSet = null, accessUid = null;
 
   /* ---------- gate ---------- */
@@ -328,7 +373,8 @@
 
   /* ---------- customers ---------- */
   async function loadCustomers() {
-    const [cs, as] = await Promise.all([getDocs(collection(db, "customers")), getDocs(collection(db, "access"))]);
+    const [cs, as, ws] = await Promise.all([getDocs(collection(db, "customers")), getDocs(collection(db, "access")), getDocs(collection(db, "wishlists")).catch(() => null)]);
+    wishMap = ws ? Object.fromEntries(ws.docs.map(d => [d.id, d.data().items || []])) : {};
     customers = cs.docs.map(d => ({ uid: d.id, ...d.data() }))
       .sort((a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0));
     accessMap = Object.fromEntries(as.docs.map(d => [d.id, d.data()]));
@@ -350,7 +396,7 @@
     const q = $("search").value.trim().toLowerCase();
     const list = customers.filter(c => !q || [c.name, c.mobile, c.email].some(v => (v || "").toLowerCase().includes(q)));
     $("custTable").innerHTML = `
-      <thead><tr><th>Name</th><th>Mobile</th><th>Email</th><th>Gender</th><th>Age</th><th>Date of birth</th><th>Anniversary</th><th>Joined</th><th>Last login</th><th>Catalogue sets</th><th></th></tr></thead>
+      <thead><tr><th>Name</th><th>Mobile</th><th>Email</th><th>Gender</th><th>Age</th><th>Date of birth</th><th>Anniversary</th><th>Joined</th><th>Last login</th><th>Catalogue sets</th><th>Wishlist</th><th></th></tr></thead>
       <tbody>${list.length ? list.map(c => `
         <tr>
           <td><b>${esc(c.name)}</b></td>
@@ -360,12 +406,25 @@
           <td>${fmt(c.dob)}</td><td>${fmt(c.anniversary)}</td>
           <td>${fmt(c.createdAt)}</td><td>${fmt(c.lastLoginAt, true)}</td>
           <td>${accessLabel(c.uid)}</td>
+          <td>${(wishMap[c.uid] || []).length ? `<button class="btn btn-ghost btn-sm" data-wishview="${esc(c.uid)}">♡ ${(wishMap[c.uid] || []).length}</button>` : `<span class="muted">—</span>`}</td>
           <td><button class="btn btn-ghost btn-sm" data-access="${esc(c.uid)}">Access</button></td>
-        </tr>`).join("") : `<tr><td colspan="11" class="center muted">${customers.length ? "No match." : "No customers yet."}</td></tr>`}</tbody>`;
+        </tr>`).join("") : `<tr><td colspan="12" class="center muted">${customers.length ? "No match." : "No customers yet."}</td></tr>`}</tbody>`;
   }
   $("search").addEventListener("input", renderCustomers);
   $("reloadBtn").onclick = loadCustomers;
-  $("custTable").addEventListener("click", e => { const uid = e.target.dataset.access; if (uid) openAccess(uid); });
+  $("custTable").addEventListener("click", e => {
+    const uid = e.target.dataset.access; if (uid) openAccess(uid);
+    const w = e.target.closest("[data-wishview]");
+    if (w) {
+      const c = customers.find(x => x.uid === w.dataset.wishview), items = wishMap[w.dataset.wishview] || [];
+      $("cadTitle").textContent = `${c.name}'s wishlist`;
+      $("cadMeta").innerHTML = `${esc(c.mobile)} · ${items.length} saved · <a href="${custWa(c)}" target="_blank" rel="noopener">Message on WhatsApp</a>`;
+      $("cadColours").innerHTML = "";
+      $("cadViews").innerHTML = items.map(it => `<a href="${it.kind === "stock" ? "stock.html#" + encodeURIComponent(it.id) : "product.html?code=" + encodeURIComponent(it.code)}" target="_blank" rel="noopener" class="wish-mini"><img src="${esc(it.img)}" alt=""><span>${esc(it.name)}<small>${esc(it.code || "")}${it.kind === "stock" ? " · stock" : ""}</small></span></a>`).join("");
+      $("cadSheet").innerHTML = "";
+      $("cadDlg").showModal();
+    }
+  });
 
   $("csvBtn").onclick = () => {
     const cols = ["Name", "Mobile", "Email", "Gender", "Age", "Date of birth", "Anniversary", "Joined", "Last login", "Catalogue access until"];
@@ -749,6 +808,36 @@
 
 
   /* ---------- ready stock ---------- */
+  const { loadPricing, computePrice, DEFAULT_OFFER, inr } = await import("./js/pricing.js?v=202610162146");
+  let pricingNow = await loadPricing();
+  const offerNow = () => ({ makingOff: +$("oMakingOff").value || 0, diamondOff: +$("oDiaOff").value || 0, gst: $("oGst").value === "" ? DEFAULT_OFFER.gst : +$("oGst").value });
+  $("oMakingOff").value = pricingNow.offer.makingOff; $("oDiaOff").value = pricingNow.offer.diamondOff; $("oGst").value = pricingNow.offer.gst;
+  $("oOfferSave").onclick = async () => {
+    await setDoc(doc(db, "public", "stockOffer"), { ...offerNow(), updatedAt: serverTimestamp() });
+    pricingNow = { ...pricingNow, offer: offerNow() };
+    $("oOfferMsg").textContent = "Saved."; loadStock();
+  };
+  function priceRecord() {
+    return $("sMode").value === "live"
+      ? { mode: "live", making: num("sMaking"), diamondRate: num("sDiaRate"), other: num("sOther"), gst: $("sGst").checked }
+      : { mode: "fixed", price: num("sPrice"), mrp: num("sMrp") };
+  }
+  function draftItem() {
+    return { goldKt: $("sKt").value, grossWt: num("sGross"), netWt: num("sNet"), diamondWt: num("sDia") };
+  }
+  function stockPreview() {
+    const live = $("sMode").value === "live";
+    document.querySelectorAll("#stockEditor .live-only").forEach(e => e.hidden = !live);
+    document.querySelectorAll("#stockEditor .fixed-only").forEach(e => e.hidden = live);
+    const c = computePrice(draftItem(), priceRecord(), { ...pricingNow, offer: offerNow() });
+    if (!c) { $("sPreview").innerHTML = live ? `<span class="muted">${pricingNow.rates["k" + $("sKt").value.replace(/\D/g, "")] ? "Enter weights and rates to see the price." : "No gold rate saved for " + esc($("sKt").value) + " — add it in “Gold rate & offers”."}</span>` : ""; return; }
+    if (c.mode === "fixed") { $("sPreview").innerHTML = `Customers see <b>${inr(c.final)}</b>${c.was ? ` <s>${inr(c.was)}</s>` : ""}`; return; }
+    const L = c.lines;
+    $("sPreview").innerHTML = `Today customers see <b>${inr(c.final)}</b>${c.was ? ` <s>${inr(c.was)}</s>` : ""}
+      <small>Gold ${inr(L.gold)} (${c.gold.weight.toFixed(2)} g @ ${inr(c.gold.rate10)}/10 g) · Making ${inr(L.making)} − ${inr(L.makingOff)} · Diamonds ${inr(L.diamonds)} − ${inr(L.diamondOff)}${L.other ? " · Other " + inr(L.other) : ""}${L.gst ? " · GST " + inr(L.gst) : ""}</small>`;
+  }
+  ["sMode", "sMaking", "sDiaRate", "sOther", "sPrice", "sMrp", "sGst", "sKt", "sGross", "sNet", "sDia", "oMakingOff", "oDiaOff", "oGst"]
+    .forEach(id => $(id).addEventListener("input", stockPreview));
   let stock = [], stockPrices = {}, editingStock = null, sMedia = [];
   const num = id => { const v = $(id).value; return v === "" ? null : +v; };
   async function loadStock() {
@@ -761,7 +850,7 @@
         ${m ? (m.type === "video" ? `<video src="${esc(m.url)}#t=0.5" muted preload="metadata"></video>` : `<img src="${esc(m.url)}" alt="">`) : `<div class="offer-thumb">—</div>`}
         <div class="offer-row-text"><b>${esc(it.title)}</b> <span class="muted">${esc(it.code || "")} · ${esc(it.category)}</span>
           <span class="pill ${it.status === "sold" ? "off" : it.status === "reserved" ? "" : "on"}">${esc(it.status || "available")}</span>${it.visible === false ? ` <span class="pill">hidden</span>` : ""}
-          <br><span class="muted">${esc(it.goldKt || "")} · ${it.grossWt ?? "–"} g · ${it.diamondWt ?? "–"} ct · ${(it.media || []).length} photo/video · ${pr && pr.price ? "₹" + Number(pr.price).toLocaleString("en-IN") : "no price"}</span></div>
+          <br><span class="muted">${esc(it.goldKt || "")} · ${it.grossWt ?? "–"} g · ${it.diamondWt ?? "–"} ct · ${(it.media || []).length} photo/video · ${(() => { const c = computePrice(it, pr, pricingNow); return c ? inr(c.final) + (c.mode === "live" ? " (live)" : "") : "no price"; })()}</span></div>
         <div class="btn-row">
           <button class="btn btn-ghost btn-sm" data-sedit="${esc(it.id)}">Edit</button>
           <button class="btn btn-ghost btn-sm" data-ssold="${esc(it.id)}">${it.status === "sold" ? "Mark available" : "Mark sold"}</button>
@@ -789,11 +878,14 @@
     $("sKt").value = it ? it.goldKt || "18KT" : "18KT"; $("sColour").value = it ? it.goldColour || "" : "";
     $("sGross").value = it?.grossWt ?? ""; $("sNet").value = it?.netWt ?? ""; $("sDia").value = it?.diamondWt ?? "";
     $("sPcs").value = it?.diamondPcs ?? ""; $("sSize").value = it?.size || ""; $("sNotes").value = it?.notes || "";
+    $("sMode").value = pr.mode || (pr.price ? "fixed" : "live");
     $("sPrice").value = pr.price ?? ""; $("sMrp").value = pr.mrp ?? "";
+    $("sMaking").value = pr.making ?? ""; $("sDiaRate").value = pr.diamondRate ?? ""; $("sOther").value = pr.other ?? "";
+    $("sGst").checked = pr.gst !== false;
     $("sVisible").checked = it ? it.visible !== false : true;
     sMedia = it ? [...(it.media || [])] : []; renderSMedia();
     $("sFiles").value = ""; $("sErr").hidden = true;
-    $("stockEditor").hidden = false; $("stockEditor").scrollIntoView({ behavior: "smooth" });
+    $("stockEditor").hidden = false; stockPreview(); $("stockEditor").scrollIntoView({ behavior: "smooth" });
   }
   $("newStockBtn").onclick = () => openStock(null);
   $("sCancel").onclick = () => { $("stockEditor").hidden = true; };
@@ -838,8 +930,9 @@
     $("sSave").disabled = true;
     try {
       await setDoc(doc(db, "stock", id), data);
-      const price = num("sPrice"), mrp = num("sMrp");
-      if (price !== null || mrp !== null) await setDoc(doc(db, "stockPrices", id), { price, mrp, updatedAt: serverTimestamp() });
+      const rec = priceRecord();
+      const hasPrice = rec.mode === "live" ? (rec.making !== null || rec.diamondRate !== null) : rec.price !== null;
+      if (hasPrice) await setDoc(doc(db, "stockPrices", id), { ...rec, updatedAt: serverTimestamp() });
       else await deleteDoc(doc(db, "stockPrices", id)).catch(() => {});
       $("stockEditor").hidden = true; await loadStock();
     } catch (e) { err.hidden = false; err.textContent = "Could not save: " + e.message; }
@@ -857,6 +950,61 @@
       await deleteDoc(doc(db, "stock", t.sdel)); await deleteDoc(doc(db, "stockPrices", t.sdel)).catch(() => {}); loadStock();
     }
   });
+
+
+  /* ---------- insights ---------- */
+  let inDays = 7;
+  const dayKey = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  function bars(obj, label = k => esc(k), limit = 10) {
+    const rows = Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, limit);
+    if (!rows.length) return `<p class="muted">No data yet.</p>`;
+    const max = rows[0][1];
+    return rows.map(([k, v]) => `<div class="in-bar"><span class="in-label">${label(k)}</span><span class="in-track"><i style="width:${Math.max(4, v / max * 100)}%"></i></span><b>${v}</b></div>`).join("");
+  }
+  const PAGE_NAMES = { home: "Home", collections: "Collections", stock: "Ready Stock", about: "About", why: "Why Lab-Grown", contact: "Contact", account: "Account", privacy: "Privacy", wishlist: "Wishlist", compare: "Compare", ringsize: "Ring size guide", page: "Other" };
+  const EVENT_NAMES = { wishlist_add: "Added to wishlist ♡", compare_add: "Added to compare", tryon_click: "Opened virtual try-on", signup: "New sign-ups" };
+  function designName(code) {
+    const p = (window.PRODUCTS || []).find(x => x.code === code) || designs.find(x => x.code === code) || library.find(x => x.code === code);
+    return `${esc(p ? p.name : code)} <small>${esc(code)}</small>`;
+  }
+  async function loadInsights() {
+    const days = [];
+    for (let i = 0; i < inDays; i++) { const d = new Date(); d.setDate(d.getDate() - i); days.push(dayKey(d)); }
+    const snaps = await Promise.all(days.map(k => getDoc(doc(db, "analytics", k)).catch(() => null)));
+    const sum = { visitors: 0, views: {}, designs: {}, stock: {}, wa: {}, events: {} }, perDay = [];
+    snaps.forEach((sn, i) => {
+      const d = sn && sn.exists() ? sn.data() : {};
+      const dayViews = Object.values(d.views || {}).reduce((a, b) => a + b, 0);
+      perDay.unshift({ day: days[i], visitors: d.visitors || 0, views: dayViews });
+      sum.visitors += d.visitors || 0;
+      ["views", "designs", "stock", "wa", "events"].forEach(g => Object.entries(d[g] || {}).forEach(([k, v]) => { sum[g][k] = (sum[g][k] || 0) + v; }));
+    });
+    const total = o => Object.values(o).reduce((a, b) => a + b, 0);
+    const newCustomers = customers.filter(c => toDate(c.createdAt) >= new Date(Date.now() - inDays * 864e5)).length;
+    $("inKpis").innerHTML = `<div><b>${sum.visitors}</b><span>Visitors</span></div><div><b>${total(sum.views)}</b><span>Page views</span></div>
+      <div><b>${total(sum.wa)}</b><span>WhatsApp clicks</span></div><div><b>${newCustomers}</b><span>New sign-ups</span></div>
+      <div><b>${sum.events.wishlist_add || 0}</b><span>Wishlist saves</span></div>`;
+    const maxV = Math.max(1, ...perDay.map(d => d.views));
+    $("inChart").innerHTML = inDays === 1 ? "" : `<div class="in-cols">${perDay.map(d => `<div class="in-col" title="${d.day}: ${d.visitors} visitors, ${d.views} views">
+      <i style="height:${d.views / maxV * 100}%"></i><span>${inDays <= 30 ? Number(d.day.slice(8)) : ""}</span></div>`).join("")}</div><p class="muted in-cap">Page views per day</p>`;
+    $("inDesigns").innerHTML = bars(sum.designs, designName);
+    $("inStock").innerHTML = bars(sum.stock, id => { const it = stock.find(x => x.id === id); return it ? `${esc(it.title)} <small>${esc(it.code || "")}</small>` : esc(id); });
+    $("inPages").innerHTML = bars(sum.views, k => esc(PAGE_NAMES[k] || k));
+    $("inWa").innerHTML = bars(sum.wa, k => esc(PAGE_NAMES[k] || k));
+    $("inEvents").innerHTML = bars(sum.events, k => esc(EVENT_NAMES[k] || k));
+    // wishlists: all customers' saved pieces (current, not limited to the date range)
+    const ws = await getDocs(collection(db, "wishlists")).catch(() => null);
+    const count = {}, names = {};
+    if (ws) ws.docs.forEach(d => (d.data().items || []).forEach(it => { count[it.key] = (count[it.key] || 0) + 1; names[it.key] = `${esc(it.name)} <small>${esc(it.code || "")}${it.kind === "stock" ? " · stock" : ""}</small>`; }));
+    $("inWish").innerHTML = bars(count, k => names[k] || esc(k));
+  }
+  $("inRange").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    inDays = +b.dataset.days;
+    $("inRange").querySelectorAll("button").forEach(x => x.classList.toggle("active", x === b));
+    loadInsights();
+  });
+  document.querySelector('.admin-tabs [data-tab="insights"]').addEventListener("click", loadInsights);
 
   document.addEventListener("venora-auth", e => start(e.detail));
 </script>

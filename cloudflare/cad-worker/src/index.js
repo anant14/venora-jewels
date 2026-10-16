@@ -52,6 +52,31 @@ export default {
 
     const isCad = request.method === "GET" && url.pathname.startsWith("/cad/");
     const isUpload = request.method === "POST" && url.pathname === "/upload";
+
+    // New-lead alert: any signed-in customer's browser calls this once after signing up.
+    // We verify their login, then WhatsApp the business (CallMeBot). One alert per customer.
+    if (request.method === "POST" && url.pathname === "/notify") {
+      const a = request.headers.get("Authorization") || "";
+      let c;
+      try { c = await verifyIdToken(a.slice(7), env.PROJECT_ID); } catch (e) { return new Response("Invalid login", { status: 401, headers: cors }); }
+      const body = await request.json().catch(() => ({}));
+      const clip = (v, n) => String(v || "").replace(/[\r\n]+/g, " ").slice(0, n);
+      const msg = `🔔 New Venora sign-up\nName: ${clip(body.name, 60)}\nMobile: ${clip(body.mobile, 16)}\nEmail: ${clip(c.email, 80)}` +
+        (body.dob ? `\nBirthday: ${clip(body.dob, 10)}` : "") + (body.anniversary ? `\nAnniversary: ${clip(body.anniversary, 10)}` : "") +
+        `\nWhatsApp them: https://wa.me/${clip(body.mobile, 16).replace(/\D/g, "").replace(/^(\d{10})$/, "91$1")}`;
+      // only once per customer: remember in the edge cache for 30 days
+      const seen = new Request(`https://notify.venora/${c.sub}`);
+      if (await caches.default.match(seen)) return Response.json({ ok: true, duplicate: true }, { headers: cors });
+      await caches.default.put(seen, new Response("1", { headers: { "Cache-Control": "max-age=2592000" } }));
+      const targets = String(env.ALERT_TARGETS || "").split(",").map(t => t.trim()).filter(Boolean);   // "phone:apikey,phone:apikey"
+      const sent = await Promise.all(targets.map(async t => {
+        const [phone, key] = t.split(":");
+        const r = await fetch(`https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&apikey=${encodeURIComponent(key)}&text=${encodeURIComponent(msg)}`).catch(() => null);
+        return !!(r && r.ok);
+      }));
+      return Response.json({ ok: true, sent: sent.filter(Boolean).length, configured: targets.length }, { headers: cors });
+    }
+
     if (!isCad && !isUpload) return new Response("Not found", { status: 404, headers: cors });
 
     // admins only

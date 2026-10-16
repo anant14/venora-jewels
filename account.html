@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610162116">
+<link rel="stylesheet" href="css/style.css?v=202610162146">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
 <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
@@ -46,12 +46,12 @@
 
 <footer id="site-footer"></footer>
 
-<script src="js/config.js?v=202610162102"></script>
-<script src="js/products.js?v=202610162102"></script>
-<script src="js/main.js?v=202610162115"></script>
-<script src="js/firebase-config.js?v=202610162102"></script>
+<script src="js/config.js?v=202610162146"></script>
+<script src="js/products.js?v=202610162146"></script>
+<script src="js/main.js?v=202610162146"></script>
+<script src="js/firebase-config.js?v=202610162146"></script>
 <script type="module">
-  import { login, logout, refresh, ready, isActive, db, doc, setDoc, serverTimestamp } from "./js/auth.js?v=202610162115";
+  import { login, logout, refresh, ready, isActive, db, doc, setDoc, serverTimestamp } from "./js/auth.js?v=202610162146";
   const { esc, productCard, ICON } = Venora;
   const view = document.getElementById("view");
   const fmtDate = t => { const d = t && t.toDate ? t.toDate() : t ? new Date(t) : null; return d ? d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : ""; };
@@ -139,6 +139,13 @@
       try {
         e.submitter.disabled = true;
         await setDoc(doc(db, "customers", u.uid), data);
+        if (!existing) {   // brand-new customer: WhatsApp alert to Venora + count the sign-up
+          u.getIdToken().then(tok => fetch("https://venora-cad.jewelsvenora.workers.dev/notify", {
+            method: "POST", headers: { Authorization: "Bearer " + tok, "Content-Type": "application/json" },
+            body: JSON.stringify({ name: data.name, mobile: data.mobile, dob: data.dob, anniversary: data.anniversary })
+          })).catch(() => {});
+          if (window.VenoraTrack) window.VenoraTrack("events", "signup");
+        }
         render(await refresh());
       } catch (ex) {
         e.submitter.disabled = false;
@@ -223,6 +230,7 @@
 
   document.addEventListener("venora-auth", e => render(e.detail));
 </script>
-<script type="module" src="js/live.js?v=202610162115"></script>
+<script type="module" src="js/live.js?v=202610162146"></script>
+<script type="module" src="js/extras.js?v=202610162146"></script>
 </body>
 </html>

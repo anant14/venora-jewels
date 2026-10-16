@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compare Designs | Venora Jewels</title>
+<meta name="description" content="Compare Venora Jewels designs and ready stock side by side.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=202610162146">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+<meta name="theme-color" content="#2f0719">
+</head>
+<body data-page="compare">
+<header id="site-header"></header>
+
+<main>
+  <div class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">Compare</span>
+      <h1>Compare side by side</h1>
+      <p>Up to three designs or ready stock pieces, side by side.</p>
+    </div>
+  </div>
+  <section class="tight">
+    <div class="wrap">
+      <div class="table-wrap cmp-wrap" id="cmpTable"></div>
+      <div class="center mt btn-row" style="justify-content:center" id="cmpActions"></div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="js/config.js?v=202610162146"></script>
+<script src="js/products.js?v=202610162146"></script>
+<script src="js/main.js?v=202610162146"></script>
+<script src="js/firebase-config.js?v=202610162146"></script>
+<script type="module" src="js/auth.js?v=202610162146"></script>
+<script type="module" src="js/live.js?v=202610162146"></script>
+<script type="module" src="js/extras.js?v=202610162146"></script>
+<script type="module">
+  import { db, doc, getDoc, ready } from "./js/auth.js?v=202610162146";
+  import { loadPricing, computePrice, inr } from "./js/pricing.js?v=202610162146";
+  const { esc, waLink, ICON } = window.Venora;
+  const $ = id => document.getElementById(id);
+  async function render() {
+    const C = window.VenoraCompare; if (!C) return;
+    const items = C.list();
+    if (!items.length) {
+      $("cmpTable").innerHTML = `<div class="empty"><h1>Nothing to compare yet</h1><p>Tap ⇄ on up to three designs or ready stock pieces.</p><a class="btn btn-dark" href="collections.html">Explore designs</a> <a class="btn btn-ghost" href="stock.html">Ready stock</a></div>`;
+      $("cmpActions").innerHTML = ""; return;
+    }
+    // prices for ready stock (members only)
+    const st = await ready(), pricing = await loadPricing();
+    const member = st.user && (st.profile || st.isAdmin);
+    const price = {};
+    for (const i of items.filter(x => x.kind === "stock")) {
+      if (!member) { price[i.key] = `<a class="stock-login" href="account.html">🔒 Login to see price</a>`; continue; }
+      const p = await getDoc(doc(db, "stockPrices", i.id)).catch(() => null);
+      const c = computePrice(i, p && p.exists() ? p.data() : null, pricing);
+      price[i.key] = c ? `<b class="stock-price">${inr(c.final)}</b>${c.was ? ` <s class="stock-mrp">${inr(c.was)}</s>` : ""}` : `<span class="muted">On request</span>`;
+    }
+    const val = (i, f) => f(i) || `<span class="muted">—</span>`;
+    const rows = [
+      ["", i => `<a href="${C.url(i)}" class="cmp-img"><img src="${esc(i.img)}" alt="${esc(i.name)}"></a><h3><a href="${C.url(i)}">${esc(i.name)}</a></h3><button class="cmp-remove" data-cmp-rm="${esc(i.key)}">Remove</button>`],
+      ["Type", i => i.kind === "stock" ? "Ready stock — available now" : "Made to order"],
+      ["Category", i => esc(i.category || "")],
+      ["Code", i => esc(i.code || "")],
+      ["Gold", i => i.kind === "stock" ? esc([i.goldKt, i.goldColour].filter(Boolean).join(" · ")) : "9KT · 14KT · 18KT<br><small>Yellow, rose or white</small>"],
+      ["Gross weight", i => i.grossWt ? esc(i.grossWt) + " g" : ""],
+      ["Gold weight", i => i.netWt ? esc(i.netWt) + " g" : ""],
+      ["Diamonds", i => i.kind === "stock" ? esc([i.diamondWt ? i.diamondWt + " ct" : "", i.diamondPcs ? i.diamondPcs + " pcs" : ""].filter(Boolean).join(" · ")) : esc((i.details && (i.details["Diamond"] || "")) || "Lab grown, IGI certified")],
+      ["Shape / style", i => esc(i.details ? [i.details["Shape"] || i.details["Shapes"] || i.details["Centre"], i.details["Style"] || i.details["Setting"]].filter(Boolean).join(" · ") : "")],
+      ["Size", i => esc(i.size || "")],
+      ["Price", i => i.kind === "stock" ? price[i.key] : `<span class="muted">On request</span>`],
+      ["", i => `<a class="btn btn-wa btn-sm" target="_blank" rel="noopener" href="${waLink(`Hello Venora Jewels, I'm interested in "${i.name}" (${i.code || i.id}). Please share details.`)}">${ICON.whatsapp} Enquire</a>`]
+    ];
+    $("cmpTable").innerHTML = `<table class="compare cmp-table"><tbody>${rows.map(([k, f]) => `<tr><th>${k}</th>${items.map(i => `<td>${val(i, f)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+    $("cmpActions").innerHTML = `<a class="btn btn-ghost btn-sm" href="collections.html">Add more designs</a><button class="btn btn-ghost btn-sm" data-cmp-clear>Clear all</button>
+      <a class="btn btn-wa btn-sm" target="_blank" rel="noopener" href="${waLink("Hello Venora Jewels, I'm comparing:\n" + items.map(i => `• ${i.name} (${i.code || i.id})`).join("\n") + "\nCan you help me choose?")}">${ICON.whatsapp} Ask us to help choose</a>`;
+  }
+  document.addEventListener("click", e => { if (e.target.closest("[data-cmp-rm], [data-cmp-clear]")) setTimeout(render, 50); });
+  render();
+</script>
+</body>
+</html>

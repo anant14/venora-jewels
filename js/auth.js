@@ -7,7 +7,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, query, orderBy,
-  serverTimestamp, Timestamp, writeBatch
+  serverTimestamp, Timestamp, writeBatch, increment
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
 // The two admin logins. Must match the list in firestore.rules.
@@ -16,7 +16,7 @@ export const ADMINS = ["jewelsvenora@gmail.com", "anantbansal2696@gmail.com"];
 const app = initializeApp(window.FIREBASE_CONFIG);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, query, orderBy, serverTimestamp, Timestamp, writeBatch };
+export { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, query, orderBy, serverTimestamp, Timestamp, writeBatch, increment };
 
 const isAdminUser = u => !!u && u.emailVerified && ADMINS.includes((u.email || "").toLowerCase());
 const toDate = t => (t && typeof t.toDate === "function" ? t.toDate() : t ? new Date(t) : null);

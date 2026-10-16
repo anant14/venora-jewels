@@ -1,9 +1,12 @@
 /* Venora Jewels — Ready Stock page.
    Items (stock/{id}) are public; prices (stockPrices/{id}) load only for logged-in customers
    with a completed profile — the database refuses them to everyone else. */
-import { db, collection, getDocs, doc, getDoc } from "./auth.js?v=202610162115";
+import { db, collection, getDocs, doc, getDoc } from "./auth.js?v=202610162146";
+
+import { loadPricing, computePrice } from "./pricing.js?v=202610162146";
 
 const { esc, waLink, ICON } = window.Venora;
+let pricing = { rates: {}, offer: { makingOff: 20, diamondOff: 10, gst: 3 } };
 const $ = id => document.getElementById(id);
 const inr = n => "₹" + Math.round(Number(n)).toLocaleString("en-IN");
 const wt = (n, unit) => (n || n === 0) && n !== "" ? `${Number(n).toLocaleString("en-IN", { maximumFractionDigits: 3 })} ${unit}` : "";
@@ -13,12 +16,33 @@ let items = [], prices = {}, cat = new URLSearchParams(location.search).get("cat
 
 function priceHtml(it) {
   if (it.status === "sold") return `<span class="stock-sold">Sold</span>`;
-  const p = prices[it.id];
-  if (p && p.price) {
-    return `<span class="stock-price">${inr(p.price)}</span>${p.mrp && p.mrp > p.price ? ` <s class="stock-mrp">${inr(p.mrp)}</s>` : ""}`;
+  const c = computePrice(it, prices[it.id], pricing);
+  if (c) {
+    return `<span class="stock-price">${inr(c.final)}</span>${c.was ? ` <s class="stock-mrp">${inr(c.was)}</s>` : ""}${c.mode === "live" ? ` <span class="live-tag" title="Updates daily with the gold rate">● live</span>` : ""}`;
   }
   if (authState && authState.user && authState.profile) return `<span class="muted">Price on request</span>`;
   return `<a class="stock-login" href="account.html">🔒 Login to see price</a>`;
+}
+
+// members: how the live price is made up (or today's gold value for fixed-price pieces)
+function breakdown(it) {
+  if (it.status === "sold") return "";
+  const c = computePrice(it, prices[it.id], pricing);
+  if (!c) return "";
+  const rateNote = c.gold ? `${esc(it.goldKt)} gold @ ${inr(c.gold.rate10)}/10 g` : "";
+  if (c.mode !== "live") return c.gold ? `<p class="gold-value">Gold value today: <b>${inr(c.gold.value)}</b> <span class="muted">(${c.gold.weight.toFixed(2)} g · ${rateNote})</span></p>` : "";
+  const L = c.lines, row = (k, v, cls = "") => `<tr class="${cls}"><th>${k}</th><td>${v}</td></tr>`;
+  return `<details class="price-break" open><summary>Live price breakdown <span class="muted">· updates daily with the gold rate</span></summary>
+    <table class="spec">
+      ${row(`Gold · ${c.gold.weight.toFixed(2)} g`, inr(L.gold) + `<small>${rateNote}</small>`)}
+      ${L.making ? row("Making charges", inr(L.making)) : ""}
+      ${L.makingOff ? row(`Ready stock offer · ${c.offer.makingOff}% off making`, "− " + inr(L.makingOff), "off") : ""}
+      ${L.diamonds ? row(`Diamonds · ${esc(it.diamondWt)} ct`, inr(L.diamonds)) : ""}
+      ${L.diamondOff ? row(`Ready stock offer · ${c.offer.diamondOff}% off diamonds`, "− " + inr(L.diamondOff), "off") : ""}
+      ${L.other ? row("Other charges", inr(L.other)) : ""}
+      ${L.gst ? row(`GST ${L.gstPct}%`, inr(L.gst)) : ""}
+      ${row("Total today", inr(c.final), "total")}
+    </table></details>`;
 }
 
 function specs(it) {
@@ -77,6 +101,7 @@ function banner() {
 
 function openItem(id) {
   const it = items.find(i => i.id === id); if (!it) return;
+  document.dispatchEvent(new CustomEvent("venora-stock-open", { detail: id }));
   const media = it.media || [];
   const slide = m => m.type === "video"
     ? `<video src="${esc(m.url)}" controls playsinline preload="metadata"></video>`
@@ -91,9 +116,11 @@ function openItem(id) {
       <h2>${esc(it.title)}</h2>
       <p class="muted">Code: ${esc(it.code || it.id)}${it.status === "reserved" ? " · Reserved" : it.status === "sold" ? " · Sold" : " · Available"}</p>
       <p class="stock-price-row big">${priceHtml(it)}</p>
+      ${breakdown(it)}
       <table class="spec">${specs(it).map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</table>
       ${it.notes ? `<p class="stock-notes">${esc(it.notes)}</p>` : ""}
-      <p class="stock-offer-note">✦ Ready stock offer: <b>20% off making charges</b> and <b>10% off diamond prices</b>.</p>
+      ${it.category === "Rings" ? `<p><a class="size-link" href="ring-size.html">📏 Find your ring size</a></p>` : ""}
+      <p class="stock-offer-note">✦ Ready stock offer: <b>${pricing.offer.makingOff}% off making charges</b> and <b>${pricing.offer.diamondOff}% off diamond prices</b>.</p>
       <div class="product-actions">
         <a class="btn btn-wa" target="_blank" rel="noopener" href="${waLink(`Hello Venora Jewels, I'm interested in ready stock item "${it.title}" (Code: ${it.code || it.id}). Is it available?`)}">${ICON.whatsapp} Enquire on WhatsApp</a>
       </div>
@@ -127,10 +154,13 @@ async function loadPrices() {
 }
 
 (async function () {
+  pricing = await loadPricing();
   const snap = await getDocs(collection(db, "stock")).catch(() => null);
   items = snap ? snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(i => i.visible !== false)
     .sort((a, b) => (a.status === "sold") - (b.status === "sold") || (b.order || 0) - (a.order || 0)) : [];
+  window.VenoraStock = { get: id => items.find(i => i.id === id), items: () => items };
   render();
+  if (location.hash.length > 1) openItem(decodeURIComponent(location.hash.slice(1)));
   document.addEventListener("venora-auth", async e => { authState = e.detail; banner(); await loadPrices(); render(); });
   if (window.VenoraAuth) { authState = await window.VenoraAuth.ready(); banner(); await loadPrices(); render(); }
 })();
