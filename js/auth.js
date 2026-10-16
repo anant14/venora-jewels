@@ -103,16 +103,17 @@ function updateHeader(state) {
   if (!link) {
     link = document.createElement("a");
     link.className = "nav-account";
-    const insta = header.querySelector(".nav-insta") || header.querySelector(".nav-cta");
-    insta.parentNode.insertBefore(link, insta);
+    header.querySelector(".nav").appendChild(link);
   }
   const icon = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
   if (!state.user) {
     link.href = "account.html";
-    link.innerHTML = `${icon}<span>Login</span>`;
+    link.classList.add("guest");
+    link.innerHTML = `${icon}<span>Login / Sign up</span>`;
   } else {
     const first = ((state.profile && state.profile.name) || state.user.displayName || "Account").split(" ")[0];
     link.href = state.isAdmin ? "admin.html" : "account.html";
+    link.classList.remove("guest");
     link.innerHTML = `${icon}<span>${state.isAdmin ? "Admin" : first.replace(/[<>&"]/g, "")}</span>`;
   }
 }

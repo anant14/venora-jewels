@@ -838,3 +838,26 @@ body.leaving main { opacity: 0; transition: opacity .25s ease; }
 .nav ul { gap: 22px; }
 .nav ul a { white-space: nowrap; letter-spacing: .09em; }
 @media (min-width: 861px) and (max-width: 1240px) { .nav ul { gap: 14px; } .nav ul a { font-size: .72rem; letter-spacing: .06em; } .nav { gap: 16px; } }
+
+/* Login in the header: gold button for guests, outlined name chip when signed in */
+.nav-account { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border: 1px solid var(--gold); border-radius: 30px; color: var(--gold-light); font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; transition: background .2s, color .2s, transform .2s; }
+.nav-account:hover { background: var(--gold); color: #2a0614; }
+.nav-account.guest { background: var(--gold); color: #2a0614; font-weight: 500; box-shadow: 0 0 0 0 rgba(201,163,104,.6); animation: login-pulse 2.8s ease-out 1.5s 3; }
+.nav-account.guest:hover { background: var(--gold-light); color: #2a0614; transform: translateY(-1px); }
+.nav-account .ico { width: 18px; height: 18px; }
+@keyframes login-pulse { 0% { box-shadow: 0 0 0 0 rgba(201,163,104,.6); } 100% { box-shadow: 0 0 0 12px rgba(201,163,104,0); } }
+@media (max-width: 860px) {
+  .nav-account { order: 1; padding: 7px 12px; font-size: .7rem; }
+  .nav-account span { display: inline; }
+  .nav-account.guest span { font-size: 0; }
+  .nav-account.guest span::after { content: "Login"; font-size: .7rem; }
+}
+@media (prefers-reduced-motion: reduce) { .nav-account.guest { animation: none; } }
+@media (max-width: 860px) {
+  .nav .logo small { display: none; }
+  .nav { gap: 6px; }
+  .nav-account { gap: 5px; padding: 6px 11px; }
+  .nav-account .ico { width: 16px; height: 16px; }
+  .nav-insta { padding: 4px; }
+}
+@media (max-width: 360px) { .nav .logo { font-size: 1.35rem; } }

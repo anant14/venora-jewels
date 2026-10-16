@@ -1,7 +1,7 @@
 /* Venora Jewels — Ready Stock page.
    Items (stock/{id}) are public; prices (stockPrices/{id}) load only for logged-in customers
    with a completed profile — the database refuses them to everyone else. */
-import { db, collection, getDocs, doc, getDoc } from "./auth.js?v=202610162102";
+import { db, collection, getDocs, doc, getDoc } from "./auth.js?v=202610162115";
 
 const { esc, waLink, ICON } = window.Venora;
 const $ = id => document.getElementById(id);

@@ -1,7 +1,7 @@
 /* Venora Jewels — today's gold rate bar (every page) and live offers (Home page).
    Both are managed in the admin panel ("Gold rate & offers"). An offer shows only while it is
    switched on and between its optional start and end dates. */
-import { db, doc, getDoc, collection, getDocs } from "./auth.js?v=202610162102";
+import { db, doc, getDoc, collection, getDocs } from "./auth.js?v=202610162115";
 
 const { esc, waLink } = window.Venora;
 const toDate = t => (t && typeof t.toDate === "function" ? t.toDate() : null);
