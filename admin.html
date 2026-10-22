@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610162146">
+<link rel="stylesheet" href="css/style.css?v=202610221807">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/brand/icon-192.png">
 <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
@@ -89,6 +89,15 @@
         </div>
         <button class="btn btn-dark btn-sm" id="oOfferSave" type="button">Save offer &amp; GST</button> <span class="form-note left" id="oOfferMsg"></span>
       </div>
+      <div class="admin-card stock-offer-card">
+        <b>Ready stock categories</b> <span class="muted">— shown as filters on the Ready Stock page, in this order</span>
+        <div class="cat-chips" id="catChips"></div>
+        <div class="cat-add">
+          <input id="catNew" maxlength="30" placeholder="New category, e.g. Pendants">
+          <button class="btn btn-dark btn-sm" id="catAdd" type="button">+ Add category</button>
+          <span class="form-note left" id="catMsg"></span>
+        </div>
+      </div>
       <div id="stockList" class="set-list"></div>
 
       <div class="admin-card" id="stockEditor" hidden>
@@ -98,7 +107,7 @@
           <div class="field"><label for="sCode">Design / stock code *</label><input id="sCode" maxlength="40" placeholder="e.g. RS-1024"></div>
         </div>
         <div class="row">
-          <div class="field"><label for="sCat">Category *</label><select id="sCat"><option>Rings</option><option>Tops</option><option>Bracelets</option></select></div>
+          <div class="field"><label for="sCat">Category *</label><select id="sCat"></select></div>
           <div class="field"><label for="sStatus">Status</label><select id="sStatus"><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold</option></select></div>
         </div>
         <div class="rate-grid stock-fields">
@@ -305,7 +314,7 @@
 
 <script src="js/config.js?v=202610162146"></script>
 <script src="js/products.js?v=202610162146"></script>
-<script src="js/main.js?v=202610162146"></script>
+<script src="js/main.js?v=202610221807"></script>
 <script src="js/firebase-config.js?v=202610162146"></script>
 <script src="js/library.js?v=202610162146"></script>
 <script type="module">
@@ -354,6 +363,7 @@
     $("outLink").onclick = e => { e.preventDefault(); logout(); };
     designs = mergeDesigns(await loadCatalogue());
     await Promise.all([loadCustomers(), loadSwitch(), loadSets(), loadRates(), loadOffers(), loadStock()]);
+    await loadCats();
     renderDesigns("All");
     // the full R2 library (3,800+ designs) loads in the background
     loadLibrary().then(items => {
@@ -807,6 +817,58 @@
   });
 
 
+  /* ---------- ready stock categories (public/stockCategories) ---------- */
+  const DEFAULT_CATS = ["Rings", "Tops", "Bracelets"];
+  let stockCats = DEFAULT_CATS.slice();
+  async function loadCats() {
+    const snap = await getDoc(doc(db, "public", "stockCategories")).catch(() => null);
+    stockCats = snap && snap.exists() && (snap.data().list || []).length ? snap.data().list : DEFAULT_CATS.slice();
+    renderCats();
+  }
+  const used = c => stock.filter(i => i.category === c).length;
+  function renderCats() {
+    $("catChips").innerHTML = stockCats.map((c, i) => `<span class="cat-chip">
+      <button type="button" data-cmove="${i}" data-d="-1" aria-label="Move left"${i ? "" : " disabled"}>‹</button>
+      <b>${esc(c)}</b> <small>${used(c)}</small>
+      <button type="button" data-cmove="${i}" data-d="1" aria-label="Move right"${i < stockCats.length - 1 ? "" : " disabled"}>›</button>
+      <button type="button" data-cdel="${i}" aria-label="Remove ${esc(c)}">×</button></span>`).join("");
+    const cur = $("sCat").value;
+    $("sCat").innerHTML = stockCats.map(c => `<option>${esc(c)}</option>`).join("") + `<option value="__new">+ Add new category…</option>`;
+    if (stockCats.includes(cur)) $("sCat").value = cur;
+  }
+  async function saveCats(msg) {
+    await setDoc(doc(db, "public", "stockCategories"), { list: stockCats, updatedAt: serverTimestamp() });
+    renderCats(); $("catMsg").textContent = msg || "Saved.";
+  }
+  async function addCat(name) {
+    name = name.trim().replace(/\s+/g, " ");
+    if (!name) return false;
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+    if (stockCats.some(c => c.toLowerCase() === name.toLowerCase())) { $("catMsg").textContent = `“${name}” already exists.`; return name; }
+    stockCats.push(name); await saveCats(`Added “${name}”.`); return name;
+  }
+  $("catAdd").onclick = async () => { if (await addCat($("catNew").value)) $("catNew").value = ""; };
+  $("catNew").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("catAdd").click(); } });
+  $("catChips").addEventListener("click", async e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.cmove !== undefined) {
+      const i = +b.dataset.cmove, j = i + +b.dataset.d;
+      [stockCats[i], stockCats[j]] = [stockCats[j], stockCats[i]]; await saveCats();
+    }
+    if (b.dataset.cdel !== undefined) {
+      const c = stockCats[+b.dataset.cdel];
+      if (used(c)) { alert(`“${c}” has ${used(c)} item(s). Move them to another category first.`); return; }
+      if (!confirm(`Remove the category “${c}”?`)) return;
+      stockCats.splice(+b.dataset.cdel, 1); await saveCats(`Removed “${c}”.`);
+    }
+  });
+  $("sCat").addEventListener("change", async () => {
+    if ($("sCat").value !== "__new") return;
+    const name = prompt("New category name (e.g. Pendants, Necklaces, Bangles):");
+    const added = name ? await addCat(name) : false;
+    $("sCat").value = added || stockCats[0];
+  });
+
   /* ---------- ready stock ---------- */
   const { loadPricing, computePrice, DEFAULT_OFFER, inr } = await import("./js/pricing.js?v=202610162146");
   let pricingNow = await loadPricing();
@@ -874,7 +936,8 @@
     editingStock = it; const pr = it ? stockPrices[it.id] || {} : {};
     $("stockEditorTitle").textContent = it ? "Edit stock item" : "New stock item";
     $("sTitle").value = it ? it.title : ""; $("sCode").value = it ? it.code || "" : "";
-    $("sCat").value = it ? it.category : "Rings"; $("sStatus").value = it ? it.status || "available" : "available";
+    if (it && it.category && !stockCats.includes(it.category)) { stockCats.push(it.category); renderCats(); }
+    $("sCat").value = it ? it.category : stockCats[0]; $("sStatus").value = it ? it.status || "available" : "available";
     $("sKt").value = it ? it.goldKt || "18KT" : "18KT"; $("sColour").value = it ? it.goldColour || "" : "";
     $("sGross").value = it?.grossWt ?? ""; $("sNet").value = it?.netWt ?? ""; $("sDia").value = it?.diamondWt ?? "";
     $("sPcs").value = it?.diamondPcs ?? ""; $("sSize").value = it?.size || ""; $("sNotes").value = it?.notes || "";

@@ -10,7 +10,13 @@ let pricing = { rates: {}, offer: { makingOff: 20, diamondOff: 10, gst: 3 } };
 const $ = id => document.getElementById(id);
 const inr = n => "₹" + Math.round(Number(n)).toLocaleString("en-IN");
 const wt = (n, unit) => (n || n === 0) && n !== "" ? `${Number(n).toLocaleString("en-IN", { maximumFractionDigits: 3 })} ${unit}` : "";
-const CATS = ["All", "Rings", "Tops", "Bracelets"];
+// filters: the admin's category list (public/stockCategories) plus any category an item uses
+let CATS = ["All", "Rings", "Tops", "Bracelets"];
+async function loadCategories() {
+  const snap = await getDoc(doc(db, "public", "stockCategories")).catch(() => null);
+  const list = snap && snap.exists() && (snap.data().list || []).length ? snap.data().list : ["Rings", "Tops", "Bracelets"];
+  CATS = ["All", ...list, ...[...new Set(items.map(i => i.category))].filter(c => c && !list.includes(c))];
+}
 
 let items = [], prices = {}, cat = new URLSearchParams(location.search).get("cat") || "All", authState = null;
 
@@ -80,7 +86,8 @@ function card(it) {
 function render() {
   if (!CATS.includes(cat)) cat = "All";
   const list = items.filter(i => cat === "All" || i.category === cat);
-  $("stockFilters").innerHTML = CATS.map(c => {
+  // show only categories that have pieces (plus the selected one)
+  $("stockFilters").innerHTML = CATS.filter(c => c === "All" || c === cat || items.some(i => i.category === c)).map(c => {
     const n = c === "All" ? items.length : items.filter(i => i.category === c).length;
     return `<button data-cat="${c}" class="${c === cat ? "active" : ""}">${c} <small>${n}</small></button>`;
   }).join("");
@@ -158,6 +165,7 @@ async function loadPrices() {
   const snap = await getDocs(collection(db, "stock")).catch(() => null);
   items = snap ? snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(i => i.visible !== false)
     .sort((a, b) => (a.status === "sold") - (b.status === "sold") || (b.order || 0) - (a.order || 0)) : [];
+  await loadCategories();
   window.VenoraStock = { get: id => items.find(i => i.id === id), items: () => items };
   render();
   if (location.hash.length > 1) openItem(decodeURIComponent(location.hash.slice(1)));
